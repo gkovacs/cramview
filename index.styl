@@ -1,0 +1,193 @@
+$video-height = 570px;
+$scrollbar-height = 30px;
+$thumbnail-height = 225px
+$thumbnail-width = 400px;
+$playbutton-width = 30px;
+
+#reviewbuttongroup {
+  position: absolute;
+  right: 20px;
+  bottom: 30px;
+}
+
+#rewatch_label {
+  float: right;
+  margin-right: 20px;
+  margin-top: 8px;
+}
+
+#rewatch_button {
+  float: right;
+  margin-right: 20px;
+}
+
+#continue_button {
+  float: right;
+  margin-right: 20px;
+}
+
+#previewbuttongroup {
+  position: absolute;
+  right: 20px;
+  bottom: 30px;
+}
+
+#watch_label {
+  float: right;
+  margin-right: 20px;
+  margin-top: 8px;
+}
+
+#watch_button {
+  float: right;
+  margin-right: 20px;
+}
+
+#skip_button {
+  float: right;
+  margin-right: 20px;
+}
+
+#viewarea {
+  //pointer-events: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+#preview_area {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -2;
+  background-color: white;
+  width: 1000px;
+  height: $video-height;
+}
+
+#review_area {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -2;
+  background-color: white;
+  width: 1000px;
+  height: $video-height;
+}
+
+video#viewer {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -3;
+}
+
+#controls_and_scrollbar {
+  background-color: white;
+  width: 1000px;
+  height: $scrollbar-height;
+  position: absolute;
+  top: $video-height;
+}
+
+#historybar {
+  background-color: pink;
+  width: 1000px - $playbutton-width;
+  height: $scrollbar-height;
+  position: absolute;
+  top: $video-height + $scrollbar-height;
+  left: $playbutton-width;
+}
+
+#scrollbar {
+  background-color: lightblue;
+  width: 1000px - $playbutton-width;
+  height: $scrollbar-height;
+  position: absolute;
+  top: 0px;
+  left: $playbutton-width;
+}
+
+/*
+.thumbnail_container {
+  width: $thumbnail-width;
+  height: $thumbnail-height;
+}
+*/
+
+.prevthumbnail {
+  //float : left;
+  width: $thumbnail-width - 6;
+  height: $thumbnail-height - 6;
+  //overflow: visible;
+  //box-sizing: border-box;
+  //-moz-box-sizing: border-box;
+  //-webkit-box-sizing: border-box;
+}
+
+#thumbnails {
+  background-color: black;
+  position: absolute;
+  left: 0px;
+  width: 1000px;
+  height: $thumbnail-height;
+  top: $video-height - $thumbnail-height - $scrollbar-height;
+}
+
+#questionbar {
+  background-color: black;
+  color: white;
+  display: none;
+  position: absolute;
+  top: $video-height - $scrollbar-height;
+  left: 0px;
+  width: 1000px;
+  height: $scrollbar-height;
+}
+
+.sectionProgressBarMarker {
+  pointer-events: none;
+  background-color: white;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 3;
+  width: 3px;
+  height: $scrollbar-height;
+}
+
+#progresstick {
+  pointer-events: none;
+  background-color: black;
+  position: absolute;
+  top: 0;
+  left: 0px;
+  z-index: 4;
+  width: 3px;
+  height: $scrollbar-height * 2;
+}
+
+#seekprogresstick {
+  pointer-events: none;
+  background-color: yellow;
+  position: absolute;
+  top: 0;
+  left: 0px;
+  z-index: 5;
+  width: 3px;
+  height: $scrollbar-height * 2;
+}
+
+.watchedMarker {
+  pointer-events: none;
+  background-color: red;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 3;
+  height: $scrollbar-height;
+}

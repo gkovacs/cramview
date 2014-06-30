@@ -1,0 +1,17 @@
+doctype html
+html(lang='en')
+  head
+    title overlay
+  body
+    script(src='jquery-2.1.1.min.js')
+    script.
+        overlayx = parseInt('30')
+        overlayy = parseInt('45')
+        overlayw = parseInt('20')
+        overlayh = parseInt('15')
+        width = parseInt(#{width})
+        height = parseInt(#{height})
+    script(src='overlay.js')
+    img(style='position: absolute; top: 0; left: 0', src='thumbnail?video=' + video + '&time=' + time + '&width=' + width + '&height=' + height)
+    #overlay
+

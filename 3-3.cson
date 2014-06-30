@@ -1,0 +1,98 @@
+[
+  {
+    'start': '0:00'
+    'end': '0:45'
+    'summary': 'whitespace is insignificant in FORTRAN'
+    'slides': [
+      {
+        'start': '0:00'
+        'thumbnail_time': '0:38'
+        'end': '0:45'
+      }
+    ]
+  }
+  {
+    'start': '0:45'
+    'end': '5:24'
+    'summary': 'example of problems in lexical analysis due to insignificant whitespace in FORTRAN'
+    'slides': [
+      {
+        'start': '0:45'
+        'thumbnail_time': '5:19'
+        'end': '5:24'
+      }
+    ]
+  }
+  {
+    'start': '5:24'
+    'end': '6:03'
+    'summary': 'what is lookahead?'
+    'slides': [
+      {
+        'start': '5:24'
+        'thumbnail_time': '6:01'
+        'end': '6:03'
+      }
+    ]
+  }
+  {
+    'start': '6:03'
+    'end': '7:15'
+    'summary': 'example of lookahead in an if-else statement'
+    'slides': [
+      {
+        'start': '6:03'
+        'thumbnail_time': '7:10'
+        'end': '7:15'
+      }
+    ]
+  }
+  {
+    'start': '7:15'
+    'end': '8:57'
+    'summary': 'keywords are not reserved in PL/1'
+    'slides': [
+      {
+        'start': '7:15'
+        'thumbnail_time': '8:55'
+        'end': '8:57'
+      }
+    ]
+  }
+  {
+    'start': '8:57'
+    'end': '10:29'
+    'summary': 'example of unbounded lookahead in PL/1 due to lack of reserved keywords'
+    'slides': [
+      {
+        'start': '8:57'
+        'thumbnail_time': '10:27'
+        'end': '10:29'
+      }
+    ]
+  }
+  {
+    'start': '10:29'
+    'end': '12:30'
+    'summary': 'example of lexical ambiguity between C++ templates and stream operators'
+    'slides': [
+      {
+        'start': '10:29'
+        'thumbnail_time': '12:27'
+        'end': '12:30'
+      }
+    ]
+  }
+  {
+    'start': '12:30'
+    'end': '13:02'
+    'summary': 'in summary, lexical analysis sometimes requires lookahead'
+    'slides': [
+      {
+        'start': '12:30'
+        'thumbnail_time': '13:00'
+        'end': '13:02'
+      }
+    ]
+  }
+]

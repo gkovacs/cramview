@@ -1,0 +1,159 @@
+#reviewbuttongroup {
+  position: absolute;
+  right: 20px;
+  bottom: 30px;
+}
+#rewatch_label {
+  float: right;
+  margin-right: 20px;
+  margin-top: 8px;
+}
+#rewatch_button {
+  float: right;
+  margin-right: 20px;
+}
+#continue_button {
+  float: right;
+  margin-right: 20px;
+}
+#previewbuttongroup {
+  position: absolute;
+  right: 20px;
+  bottom: 30px;
+}
+#watch_label {
+  float: right;
+  margin-right: 20px;
+  margin-top: 8px;
+}
+#watch_button {
+  float: right;
+  margin-right: 20px;
+}
+#skip_button {
+  float: right;
+  margin-right: 20px;
+}
+#viewarea {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+}
+#preview_area {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -2;
+  background-color: #fff;
+  width: 1000px;
+  height: 570px;
+}
+#review_area {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -2;
+  background-color: #fff;
+  width: 1000px;
+  height: 570px;
+}
+video#viewer {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -3;
+}
+#controls_and_scrollbar {
+  background-color: #fff;
+  width: 1000px;
+  height: 30px;
+  position: absolute;
+  top: 570px;
+}
+#historybar {
+  background-color: #ffc0cb;
+  width: 970px;
+  height: 30px;
+  position: absolute;
+  top: 600px;
+  left: 30px;
+}
+#scrollbar {
+  background-color: #add8e6;
+  width: 970px;
+  height: 30px;
+  position: absolute;
+  top: 0px;
+  left: 30px;
+}
+/*
+.thumbnail_container {
+  width: $thumbnail-width;
+  height: $thumbnail-height;
+}
+*/
+.prevthumbnail {
+  width: 394px;
+  height: 219px;
+}
+#thumbnails {
+  background-color: #000;
+  position: absolute;
+  left: 0px;
+  width: 1000px;
+  height: 225px;
+  top: 315px;
+}
+#questionbar {
+  background-color: #000;
+  color: #fff;
+  display: none;
+  position: absolute;
+  top: 540px;
+  left: 0px;
+  width: 1000px;
+  height: 30px;
+}
+.sectionProgressBarMarker {
+  pointer-events: none;
+  background-color: #fff;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 3;
+  width: 3px;
+  height: 30px;
+}
+#progresstick {
+  pointer-events: none;
+  background-color: #000;
+  position: absolute;
+  top: 0;
+  left: 0px;
+  z-index: 4;
+  width: 3px;
+  height: 60px;
+}
+#seekprogresstick {
+  pointer-events: none;
+  background-color: #ff0;
+  position: absolute;
+  top: 0;
+  left: 0px;
+  z-index: 5;
+  width: 3px;
+  height: 60px;
+}
+.watchedMarker {
+  pointer-events: none;
+  background-color: #f00;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 3;
+  height: 30px;
+}

@@ -1,0 +1,42 @@
+doctype html
+html(lang="en")
+  head
+    title quiz view
+    link(href='index.css', rel='stylesheet')
+    link(href='css/bootstrap.min.css', rel='stylesheet')
+    link(href='css/bootstrap-theme.min.css', rel='stylesheet')
+  body
+    script(src='jquery-2.1.1.min.js')
+    script(src='js/bootstrap.min.js')
+    script(src='index.js')
+    video#viewer
+    #preview_area
+      #previewmessage(style='color: black; font-size: 12px; margin-left: 20px; margin-top: 20px') This section will be about:
+      #previewquestion(style='color: black; font-size: 24px; margin-left: 20px; margin-bottom: 10px')
+      #preview_thumbnails
+        img#preview_thumbnail_0
+        img#preview_thumbnail_1
+      #previewbuttongroup
+        button#watch_button(type='button' class='btn btn-default btn-lg', buttontext='Watch this section')
+        button#skip_button(type='button' class='btn btn-default btn-lg') Skip this section
+        div#watch_label(style='color: black; font-size: 24px') Do you want to watch this section?
+    #review_area
+      div(style='color: black; font-size: 12px; margin-left: 20px; margin-top: 20px') You just finished watching this section:
+      #reviewquestion(style='color: black; font-size: 24px; margin-left: 20px; margin-bottom: 10px')
+      #review_thumbnails
+        img#review_thumbnail_0
+        img#review_thumbnail_1
+      #reviewbuttongroup
+        button#continue_button(type='button' class='btn btn-default btn-lg', buttontext='Continue to next section')
+        button#rewatch_button(type='button' class='btn btn-default btn-lg') Rewatch section
+        div#rewatch_label(style='color: black; font-size: 24px') Do you want to rewatch this section?
+    #thumbnails(style='display: none')
+      img.prevthumbnail#thumbnail_0
+      img.prevthumbnail#thumbnail_1
+    #questionbar
+    #controls_and_scrollbar
+      img#playpause(src='play.png')
+      #scrollbar
+        #seekprogresstick
+        #progresstick
+    #historybar
