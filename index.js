@@ -1,5 +1,5 @@
 (function(){
-  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, showReview, showPreview, hideReview, hidePreview, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, setupViewer, getUrlParameters;
+  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, showReview, showPreview, hideReview, hidePreview, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, setupViewer, getUrlParameters;
   root = typeof exports != 'undefined' && exports !== null ? exports : this;
   toSeconds = function(time){
     var timeParts, res$, i$, ref$, len$, x;
@@ -444,6 +444,27 @@
     }
     return output;
   };
+  selectText = root.selectText = function(element){
+    var doc, text, range, selection;
+    doc = document;
+    text = doc.getElementById(element);
+    range = null;
+    selection = null;
+    if (doc.body.createTextRange) {
+      range = doc.body.createTextRange();
+      range.moveToElementText(text);
+      return range.select();
+    } else if (window.getSelection) {
+      selection = window.getSelection();
+      range = doc.createRange();
+      range.selectNodeContents(text);
+      selection.removeAllRanges();
+      return selection.addRange(range);
+    }
+  };
+  root.isMouseDown = false;
+  root.startX = 0;
+  root.startY = 0;
   setupViewer = function(){
     var res$, i$, ref$, len$, i;
     res$ = [];
@@ -583,18 +604,87 @@
       setSeekThumbnailsToSectionIdx(section_idx, time_in_video);
       return setSeekProgressTickToFraction(fraction);
     });
+    $(document).mousedown(function(evt){
+      if (evt.which !== 2) {
+        return;
+      }
+      if (!isInElement(evt, $('#viewer'))) {
+        return;
+      }
+      console.log('mousedown');
+      evt.preventDefault();
+      root.isMouseDown = true;
+      root.startX = evt.clientX;
+      root.startY = evt.clientY;
+      console.log(root.startX + ',' + root.startY);
+      return $('#overlay').css({
+        width: 0,
+        height: 0,
+        left: root.startX,
+        top: root.startY
+      });
+    });
+    $(document).mouseup(function(evt){
+      root.isMouseDown = false;
+      if (!isInElement(evt, $('#viewer'))) {
+        return;
+      }
+      evt.preventDefault();
+      return console.log('mouseup');
+    });
     $(document).mousemove(function(evt){
+      var overlayw, overlayh, xp, yp, wp, hp, urlparams, linkurl;
       if (isInElement(evt, $('#scrollbar')) || isInElement(evt, $('#historybar'))) {
         $('#questionbar').show();
-        return $('#seekprogresstick').show();
+        $('#seekprogresstick').show();
       } else {
         if (false) {
-          return $('#seekprogresstick').hide();
+          $('#seekprogresstick').hide();
         } else {
           $('#questionbar').hide();
           $('#thumbnails').hide();
-          return $('#seekprogresstick').hide();
+          $('#seekprogresstick').hide();
         }
+      }
+      if (!isInElement(evt, $('#viewer')) || !root.isMouseDown) {
+        return;
+      }
+      overlayw = evt.clientX - root.startX;
+      overlayh = evt.clientY - root.startY;
+      if (overlayw > 0 && overlayh > 0) {
+        $('#overlay').show();
+        $('#overlay').show();
+        $('#overlay').width(overlayw);
+        $('#overlay').height(overlayh);
+        xp = 100 * root.startX / root.videoWidth;
+        yp = 100 * root.startY / root.videoHeight;
+        wp = 100 * overlayw / root.videoWidth;
+        hp = 100 * overlayh / root.videoHeight;
+        urlparams = {
+          width: root.videoWidth,
+          height: root.videoHeight,
+          overlayx: xp,
+          overlayy: yp,
+          overlayw: wp,
+          overlayh: hp,
+          video: root.video_file,
+          time: getVideoTime()
+        };
+        linkurl = 'overlay?' + $.param(urlparams);
+        $('#urldisplay').text(linkurl).attr('href', linkurl);
+        return $('#jsondisplay').text(JSON.stringify({
+          time: getVideoTime(),
+          overlays: [{
+            x: xp,
+            y: yp,
+            w: wp,
+            h: hp
+          }]
+        }, null, 2));
+      } else {
+        $('#overlay').hide();
+        $('#overlay').hide();
+        return $('#urldisplay').text('');
       }
     });
     return $(document).keydown(function(evt){
@@ -651,6 +741,8 @@
     return $('#viewer').on('loadedmetadata', function(){
       return $.get(metadata_file, function(data){
         var annotations;
+        root.videoWidth = $('#viewer')[0].videoWidth;
+        root.videoHeight = $('#viewer')[0].videoHeight;
         root.videoDuration = $('#viewer')[0].duration;
         root.annotations = annotations = processAnnotations(data);
         return setupViewer();

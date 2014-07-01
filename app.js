@@ -71,7 +71,7 @@
     }
     height = parseInt(req.query.height);
     if (height == null || isNaN(height)) {
-      height = 225;
+      height = 450;
     }
     if (video == null || time == null || isNaN(time)) {
       res.send('need video and time parameters');
@@ -88,38 +88,58 @@
     }
   });
   app.get('/overlay', function(req, res){
-    var video, time, width, height;
+    var video, time, width, height, overlayx, overlayy, overlayw, overlayh;
     video = req.query.video;
     time = toSeconds(req.query.time);
-    width = parseInt(req.query.width);
+    width = parseFloat(req.query.width);
     if (width == null || isNaN(width)) {
-      width = 400;
+      width = 800;
     }
-    height = parseInt(req.query.height);
+    height = parseFloat(req.query.height);
     if (height == null || isNaN(height)) {
-      height = 225;
+      height = 450;
     }
     if (video == null || time == null || isNaN(time)) {
       res.send('need video and time parameters');
+    }
+    overlayx = parseFloat(req.query.overlayx);
+    if (overlayx == null || isNaN(overlayx)) {
+      res.send('need overlayx parameter');
+    }
+    overlayy = parseFloat(req.query.overlayy);
+    if (overlayy == null || isNaN(overlayy)) {
+      res.send('need overlayy parameter');
+    }
+    overlayw = parseFloat(req.query.overlayw);
+    if (overlayw == null || isNaN(overlayw)) {
+      res.send('need overlayw parameter');
+    }
+    overlayh = parseFloat(req.query.overlayh);
+    if (overlayh == null || isNaN(overlayh)) {
+      res.send('need overlayh parameter');
     }
     return res.render('overlay', {
       video: video,
       time: time,
       width: width,
-      height: height
+      height: height,
+      overlayx: overlayx,
+      overlayy: overlayy,
+      overlayw: overlayw,
+      overlayh: overlayh
     });
   });
   app.get('/mkoverlay', function(req, res){
     var video, time, width, height;
     video = req.query.video;
     time = toSeconds(req.query.time);
-    width = parseInt(req.query.width);
+    width = parseFloat(req.query.width);
     if (width == null || isNaN(width)) {
-      width = 400;
+      width = 800;
     }
-    height = parseInt(req.query.height);
+    height = parseFloat(req.query.height);
     if (height == null || isNaN(height)) {
-      height = 225;
+      height = 450;
     }
     if (video == null || time == null || isNaN(time)) {
       res.send('need video and time parameters');

@@ -335,6 +335,26 @@ getWatchedSegments = root.getWatchedSegments = ->
         start = i
   return output
 
+selectText = root.selectText = (element) ->
+  doc = document
+  text = doc.getElementById(element)
+  range = null
+  selection = null
+  if doc.body.createTextRange #ms
+    range = doc.body.createTextRange()
+    range.moveToElementText(text)
+    range.select()
+  else if window.getSelection #all others
+    selection = window.getSelection()        
+    range = doc.createRange()
+    range.selectNodeContents(text)
+    selection.removeAllRanges()
+    selection.addRange(range)
+
+root.isMouseDown = false
+root.startX = 0
+root.startY = 0
+
 setupViewer = ->
   root.watched = [false for i in [0 to Math.round(root.videoDuration+0.5)]]
   addTicksToProgressBar()
@@ -464,6 +484,33 @@ setupViewer = ->
     $('#thumbnails').show()
     setSeekThumbnailsToSectionIdx(section_idx, time_in_video)
     setSeekProgressTickToFraction(fraction)
+  $(document).mousedown (evt) ->
+    if evt.which != 2 # middle mouse button
+      return
+    if not isInElement evt, $('#viewer')
+      return
+    console.log 'mousedown'
+    evt.preventDefault()
+    root.isMouseDown = true
+    root.startX = evt.clientX
+    root.startY = evt.clientY
+    console.log root.startX + ',' + root.startY
+    #$('#overlay').width(0)
+    #$('#overlay').height(0)
+    #$('#overlay').offset({left: root.startX, top: root.startY})
+    $('#overlay').css {
+      width: 0
+      height: 0
+      left: root.startX
+      top: root.startY
+    }
+    #console.log $('#overlay').offset()
+  $(document).mouseup (evt) ->
+    root.isMouseDown = false
+    if not isInElement evt, $('#viewer')
+      return
+    evt.preventDefault()
+    console.log 'mouseup'
   $(document).mousemove (evt) ->
     if isInElement(evt, $('#scrollbar')) or isInElement(evt, $('#historybar'))
       $('#questionbar').show()
@@ -475,6 +522,47 @@ setupViewer = ->
         $('#questionbar').hide()
         $('#thumbnails').hide()
         $('#seekprogresstick').hide()
+    if not isInElement evt, $('#viewer') or not root.isMouseDown
+      return
+    #console.log evt.clientX + ',' + evt.clientY
+    overlayw = evt.clientX - root.startX
+    overlayh = evt.clientY - root.startY
+    if overlayw > 0 and overlayh > 0
+      $('#overlay').show()
+      $('#overlay').show()
+      $('#overlay').width(overlayw)
+      $('#overlay').height(overlayh)
+      xp = 100 * root.startX / root.videoWidth
+      yp = 100 * root.startY / root.videoHeight
+      wp = 100 * overlayw / root.videoWidth
+      hp = 100 * overlayh / root.videoHeight
+      urlparams = {
+        width: root.videoWidth
+        height: root.videoHeight
+        overlayx: xp
+        overlayy: yp
+        overlayw: wp
+        overlayh: hp
+        video: root.video_file
+        time: getVideoTime()
+      }
+      linkurl = 'overlay?' + $.param(urlparams)
+      $('#urldisplay').text(linkurl).attr('href', linkurl)
+      $('#jsondisplay').text(JSON.stringify({
+        time: getVideoTime()
+        overlays: [
+          {
+            x: xp
+            y: yp
+            w: wp
+            h: hp
+          }
+        ]
+      }, null, 2))
+    else
+      $('#overlay').hide()
+      $('#overlay').hide()
+      $('#urldisplay').text('')
   $(document).keydown (evt) ->
     console.log evt.which
     key = evt.which
@@ -510,6 +598,8 @@ $(document).ready ->
   $('#viewer').attr 'src', video_file
   $('#viewer').on 'loadedmetadata', ->
     $.get metadata_file, (data) ->
+      root.videoWidth = $('#viewer')[0].videoWidth
+      root.videoHeight = $('#viewer')[0].videoHeight
       root.videoDuration = $('#viewer')[0].duration
       root.annotations = annotations = processAnnotations(data)
       setupViewer()

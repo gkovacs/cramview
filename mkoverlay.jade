@@ -2,15 +2,28 @@ doctype html
 html(lang='en')
   head
     title overlay
+    style.
+      #overlay {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        opacity: 0.5;
+        position: absolute;
+        z-index: 3;
+        background-color: blue;
+      }
   body
     script(src='jquery-2.1.1.min.js')
     script.
-        overlayx = parseInt('30')
-        overlayy = parseInt('45')
-        overlayw = parseInt('20')
-        overlayh = parseInt('15')
-        width = parseInt(#{width})
-        height = parseInt(#{height})
+        width = parseFloat(#{width})
+        height = parseFloat(#{height})
+        video = '#{video}'
+        time = parseFloat(#{time})
     script(src='mkoverlay.js')
-    img#slide(style='position: absolute; top: 0; left: 0; pointer-events: none', src='thumbnail?video=' + video + '&time=' + time + '&width=' + width + '&height=' + height)
+    img#slide(style='position: absolute; top: 0; left: 0; pointer-events: none', unselectable='on', draggable='false', src='thumbnail?video=' + video + '&time=' + time + '&width=' + width + '&height=' + height)
     #overlay
+    a#urldisplay(style='position: absolute; left: 0; top: ' + height + 'px')
+

@@ -4,6 +4,34 @@ $thumbnail-height = 225px
 $thumbnail-width = 400px;
 $playbutton-width = 30px;
 
+#jsondisplay {
+  position: absolute;
+  left: 0;
+  top: $video-height + $scrollbar-height * 4;
+}
+
+#urldisplay {
+  position: absolute;
+  left: 0;
+  top: $video-height + $scrollbar-height * 3;
+}
+
+#overlay {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  opacity: 0.5;
+  position: absolute;
+  z-index: 3;
+  background-color: blue;
+  color: white;
+  text-align: center;
+  font-size: 20px;
+}
+
 #reviewbuttongroup {
   position: absolute;
   right: 20px;

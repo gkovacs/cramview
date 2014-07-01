@@ -10,6 +10,7 @@ html(lang="en")
     script(src='js/bootstrap.min.js')
     script(src='index.js')
     video#viewer
+    #overlay Click to reveal answer
     #preview_area
       #previewmessage(style='color: black; font-size: 12px; margin-left: 20px; margin-top: 20px') This section will be about:
       #previewquestion(style='color: black; font-size: 24px; margin-left: 20px; margin-bottom: 10px')
@@ -40,3 +41,5 @@ html(lang="en")
         #seekprogresstick
         #progresstick
     #historybar
+    a#urldisplay
+    pre#jsondisplay(style='padding: 0; margin: 0', onclick='selectText("jsondisplay")')
