@@ -1,5 +1,5 @@
 (function(){
-  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, showReview, showPreview, hideReview, hidePreview, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, setupViewer, getUrlParameters;
+  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, getUrlParameters;
   root = typeof exports != 'undefined' && exports !== null ? exports : this;
   toSeconds = function(time){
     var timeParts, res$, i$, ref$, len$, x;
@@ -115,13 +115,15 @@
     thumbnail = $('#thumbnail_' + thumbnail_idx);
     return setThumbnailEmpty(thumbnail);
   };
+  root.thumbnail_width = 640;
+  root.thumbnail_height = 360;
   setThumbnailNoBorder = function(thumbnail, time){
     var thumbnail_src;
     thumbnail_src = '/thumbnail?' + $.param({
       video: root.video_file,
       time: Math.round(time),
-      width: 640,
-      height: 360
+      width: root.thumbnail_width,
+      height: root.thumbnail_height
     });
     thumbnail.attr('src', thumbnail_src);
     return thumbnail.css('border', 'solid 3px black').css('border-radius', '3px');
@@ -216,6 +218,15 @@
       return results$;
     }
   };
+  setSeekThumbnailsToTime = function(current_time){
+    var i$, ref$, len$, idx, results$ = [];
+    setSeekThumbnail(0, current_time, true);
+    for (i$ = 0, len$ = (ref$ = [1]).length; i$ < len$; ++i$) {
+      idx = ref$[i$];
+      results$.push(setSeekThumbnailEmpty(idx));
+    }
+    return results$;
+  };
   getCssWidth = function(elem){
     return elem.css('width').split('px').join('');
   };
@@ -245,7 +256,6 @@
       return updateViewedMarker($('#watched_marker_' + idx), fraction_start, fraction_end);
     };
     updateViewedMarker = function(marker, fraction_start, fraction_end){
-      console.log('updateViewedMarker');
       return marker.attr('fraction_start', fraction_start).attr('fraction_end', fraction_end).css('left', getScrollbarWidth() * fraction_start).css('width', getScrollbarWidth() * (fraction_end - fraction_start));
     };
     for (i$ = 0, len$ = (ref$ = getWatchedSegments()).length; i$ < len$; ++i$) {
@@ -278,6 +288,9 @@
   };
   setPlaying = function(isplaying){
     if (isplaying) {
+      root.mode = Modes.VIEW;
+      $('#view_area').show();
+      hideReview();
       $('#playpause').attr('src', 'pause.png');
       return $('#viewer')[0].play();
     } else {
@@ -299,70 +312,69 @@
   root.review_end_time = 0;
   root.preview_start_time = 0;
   root.preview_end_time = 0;
-  showReview = root.showReview = function(section_idx){
-    var section;
-    if (section_idx == null) {
-      console.log('need section_idx');
-      return;
-    }
-    if (root.current_section_idx === section_idx && $('#review_area').is(':visible')) {
-      return;
-    }
-    setPlaying(false);
-    root.current_section_idx = section_idx;
-    root.review_start_time = new Date().getTime() / 1000.0;
-    root.review_end_time = root.review_start_time + 15.0;
-    $('#continue_button').text($('#continue_button').attr('buttontext'));
-    section = getSectionByIdx(section_idx);
-    setVideoTime(section.end);
-    $('#review_area').show();
-    $('#reviewquestion').text(section.summary);
-    return setReviewThumbnailsToSectionIdx(section_idx);
-  };
-  showPreview = root.showPreview = function(section_idx){
-    var section;
-    if (section_idx == null) {
-      console.log('need section_idx');
-      return;
-    }
-    if (root.current_section_idx === section_idx && $('#preview_area').is(':visible')) {
-      return;
-    }
-    section = getSectionByIdx(section_idx);
-    if (section == null) {
-      return;
-    }
-    console.log('showpreview');
-    setPlaying(false);
-    root.current_section_idx = section_idx;
-    root.preview_start_time = new Date().getTime() / 1000.0;
-    root.preview_end_time = root.preview_start_time + 15.0;
-    $('#watch_button').text($('#watch_button').attr('buttontext'));
-    setVideoTime(section.start);
-    $('#preview_area').show();
-    $('#previewquestion').text(section.summary);
-    setPreviewThumbnailsToSectionIdx(section_idx);
-    if (section_idx === root.annotations.length - 1) {
-      return $('#skip_button').hide();
-    } else {
-      return $('#skip_button').show();
-    }
-  };
-  hideReview = function(){
+  /*
+  showReview = root.showReview = (section_idx) ->
+    if not section_idx?
+      console.log 'need section_idx'
+      return
+    if root.current_section_idx == section_idx and $('#review_area').is(':visible')
+      return
+    setPlaying(false)
+    root.current_section_idx = section_idx
+    root.review_start_time = new Date().getTime() / 1000.0
+    root.review_end_time = root.review_start_time + 15.0
+    $('#continue_button').text $('#continue_button').attr('buttontext')
+    #$('#continue_button').text $('#continue_button').attr('buttontext') + ' (' + Math.round(root.review_end_time - root.review_start_time) + ')'
+    section = getSectionByIdx(section_idx)
+    setVideoTime section.end
+    $('#review_area').show()
+    $('#reviewquestion').text(section.summary)
+    setReviewThumbnailsToSectionIdx(section_idx)
+  */
+  /*
+  showPreview = root.showPreview = (section_idx) ->
+    if not section_idx?
+      console.log 'need section_idx'
+      return
+    if root.current_section_idx == section_idx and $('#preview_area').is(':visible')
+      return
+    section = getSectionByIdx(section_idx)
+    if not section?
+      return
+    console.log 'showpreview'
+    setPlaying(false)
+    root.current_section_idx = section_idx
+    root.preview_start_time = new Date().getTime() / 1000.0
+    root.preview_end_time = root.preview_start_time + 15.0
+    $('#watch_button').text $('#watch_button').attr('buttontext')
+    #$('#watch_button').text $('#watch_button').attr('buttontext') + ' (' + Math.round(root.preview_end_time - root.preview_start_time) + ')'
+    setVideoTime section.start
+    $('#preview_area').show()
+    $('#previewquestion').text(section.summary)
+    setPreviewThumbnailsToSectionIdx(section_idx)
+    if section_idx == root.annotations.length - 1
+      $('#skip_button').hide()
+    else
+      $('#skip_button').show()
+  */
+  hideReview = root.hideReview = function(){
     root.review_start_time = 0;
     root.review_end_time = 0;
     return $('#review_area').hide();
   };
-  hidePreview = function(){
+  hidePreview = root.hidePreview = function(){
     root.preview_start_time = 0;
     root.preview_end_time = 0;
-    return $('#preview_area').hide();
+    return $('#review_area').hide();
   };
-  showingReview = function(){
+  showingQuiz = function(){
     return $('#review_area').is(':visible');
   };
+  showingReview = function(){
+    return root.mode === Modes.REVIEW;
+  };
   showingPreview = function(){
-    return $('#preview_area').is(':visible');
+    return root.mode === Modes.PREVIEW;
   };
   setReviewCountdown = function(){
     var curtime, time_until_end, time_until_end_str;
@@ -401,19 +413,16 @@
   continueClicked = function(){
     root.automaticSeeking = true;
     console.log('continue button clicked');
-    hideReview();
-    root.current_section_idx = getSectionIdxByTime(getVideoTime() + 1.0);
-    showPreview(root.current_section_idx);
-    return root.automaticSeeking = false;
+    root.automaticSeeking = false;
+    return priority_button_clicked(Priorities.SOON);
   };
   watchClicked = function(){
-    $('#preview_area').hide();
-    return setPlaying(true);
+    return priority_button_clicked(Priorities.NOW);
   };
   togglePlay = function(){
-    if (showingReview()) {
+    if (root.mode === Modes.REVIEW) {
       return continueClicked();
-    } else if (showingPreview()) {
+    } else if (root.mode === Modes.PREVIEW) {
       return watchClicked();
     } else if (isPlaying()) {
       return setPlaying(false);
@@ -462,9 +471,168 @@
       return selection.addRange(range);
     }
   };
+  root.section_to_priority = {};
+  Priorities = root.Priorities = {
+    NONE: 0,
+    NOW: 1,
+    SOON: 2,
+    LATER: 3,
+    NEVER: 4
+  };
+  Modes = root.Modes = {
+    PRETEST: 0,
+    PREVIEW: 1,
+    REVIEW: 2,
+    VIEW: 3
+  };
+  root.mode = Modes.PREVIEW;
+  showPreview = root.showPreview = function(section_idx){
+    var section, quizzes, overlay, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height;
+    setPlaying(false);
+    $('#view_area').hide();
+    root.mode = Modes.PREVIEW;
+    root.current_section_idx = section_idx;
+    section = root.annotations[section_idx];
+    quizzes = section.quizzes;
+    overlay = quizzes[0];
+    setVideoTime(section.start);
+    $('#now_button').show();
+    $('#reviewcaption').text($('#reviewcaption').attr('preview_text'));
+    $('#rewatch_label').text($('#rewatch_label').attr('preview_text'));
+    $('#review_area').show();
+    setThumbnailNoBorder($('#review_thumbnail_0'), section.end - 2.0);
+    thumbnail_x = 3;
+    thumbnail_y = 3;
+    thumbnail_width = root.thumbnail_width;
+    thumbnail_height = root.thumbnail_height;
+    $('#overlay').css({
+      width: overlay.w * thumbnail_width / 100.0,
+      height: overlay.h * thumbnail_height / 100.0,
+      left: thumbnail_x + overlay.x * thumbnail_width / 100.0,
+      top: thumbnail_y + overlay.y * thumbnail_height / 100.0
+    });
+    return $('#overlay').show();
+  };
+  showReview = root.showReview = function(section_idx){
+    var section, quizzes, overlay, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height;
+    setPlaying(false);
+    $('#view_area').hide();
+    root.mode = Modes.REVIEW;
+    root.current_section_idx = section_idx;
+    section = root.annotations[section_idx];
+    quizzes = section.quizzes;
+    overlay = quizzes[0];
+    setVideoTime(section.end);
+    $('#now_button').hide();
+    $('#reviewcaption').text($('#reviewcaption').attr('review_text'));
+    $('#rewatch_label').text($('#rewatch_label').attr('review_text'));
+    $('#review_area').show();
+    setThumbnailNoBorder($('#review_thumbnail_0'), section.end - 2.0);
+    thumbnail_x = 3;
+    thumbnail_y = 3;
+    thumbnail_width = root.thumbnail_width;
+    thumbnail_height = root.thumbnail_height;
+    $('#overlay').css({
+      width: overlay.w * thumbnail_width / 100.0,
+      height: overlay.h * thumbnail_height / 100.0,
+      left: thumbnail_x + overlay.x * thumbnail_width / 100.0,
+      top: thumbnail_y + overlay.y * thumbnail_height / 100.0
+    });
+    return $('#overlay').show();
+  };
+  setSectionPriorityMarker = root.setSectionPriorityMarker = function(section_idx, priority){
+    var priority_to_name, priority_name, priority_marker, section, fraction, position;
+    priority_to_name = {
+      0: '',
+      1: 'Now',
+      2: 'Soon',
+      3: 'Later',
+      4: 'Never'
+    };
+    priority_name = priority_to_name[priority];
+    priority_marker = $('#priority_marker_' + section_idx);
+    if (priority_marker.length === 0) {
+      $('#scrollbar').append($('<span>').attr('id', 'priority_marker_' + section_idx));
+      priority_marker = $('#priority_marker_' + section_idx);
+    }
+    section = getSectionByIdx(section_idx);
+    console.log(section);
+    fraction = section.start / root.videoDuration;
+    position = fraction * getScrollbarWidth();
+    console.log(position);
+    priority_marker.css('position', 'absolute');
+    priority_marker.css('left', position + 'px');
+    priority_marker.css('margin-left', 5);
+    return priority_marker.text(priority_name);
+  };
+  nextIdxLoop = root.nextIdxLoop = function(cur_idx){
+    cur_idx = cur_idx + 1;
+    if (cur_idx >= annotations.length) {
+      cur_idx = 0;
+    }
+    return cur_idx;
+  };
+  skipToNextSection = root.skipToNextSection = function(){
+    var cur_idx, ref$, priority;
+    cur_idx = nextIdxLoop(root.current_section_idx);
+    while (root.section_to_priority[cur_idx] != null && ((ref$ = root.section_to_priority[cur_idx]) === Priorities.SOON || ref$ === Priorities.LATER || ref$ === Priorities.NEVER)) {
+      priority = root.section_to_priority[cur_idx];
+      if (priority === Priorities.SOON) {
+        break;
+      } else if (priority === Priorities.LATER) {
+        root.section_to_priority[cur_idx] = Priorities.SOON;
+      }
+      cur_idx = nextIdxLoop(cur_idx);
+    }
+    return cur_idx;
+  };
+  priority_button_clicked = function(priority){
+    var next_idx;
+    console.log('priority:' + priority);
+    console.log('mode:' + root.mode);
+    console.log('preview mode:' + Modes.PREVIEW);
+    root.section_to_priority[root.current_section_idx] = priority;
+    setSectionPriorityMarker(root.current_section_idx, priority);
+    if (root.mode === Modes.PREVIEW) {
+      if (priority === Priorities.NOW) {
+        console.log('hide preview');
+        setPlaying(true);
+        return hidePreview();
+      } else {
+        next_idx = skipToNextSection();
+        return showPreview(next_idx);
+      }
+    } else if (root.mode === Modes.REVIEW) {
+      next_idx = skipToNextSection();
+      return showPreview(next_idx);
+    } else {
+      return console.log('priority button clicked in mode outside review or preview');
+    }
+  };
   root.isMouseDown = false;
   root.startX = 0;
   root.startY = 0;
+  jumpButtonClicked = root.jumpButtonClicked = function(){
+    var videoTime, sectionIdx, sectionEnd, in_watched_segment, end_of_current_segment, i$, ref$, len$, ref1$, start, end;
+    videoTime = getVideoTime();
+    sectionIdx = getSectionIdxByTime(videoTime);
+    sectionEnd = getSectionByIdx(sectionIdx).end;
+    in_watched_segment = false;
+    end_of_current_segment = 0;
+    for (i$ = 0, len$ = (ref$ = getWatchedSegments()).length; i$ < len$; ++i$) {
+      ref1$ = ref$[i$], start = ref1$[0], end = ref1$[1];
+      if (start <= videoTime && videoTime <= (ref1$ = videoTime + 3) && ref1$ <= end) {
+        in_watched_segment = true;
+        end_of_current_segment = end;
+      }
+    }
+    console.log('end of current segment is:' + end_of_current_segment);
+    if (in_watched_segment && end_of_current_segment < sectionEnd) {
+      return $('#viewer')[0].currentTime = end_of_current_segment;
+    } else {
+      return showReview(getSectionIdxByTime(videoTime));
+    }
+  };
   setupViewer = function(){
     var res$, i$, ref$, len$, i;
     res$ = [];
@@ -474,6 +642,39 @@
     }
     root.watched = res$;
     addTicksToProgressBar();
+    showPreview(0);
+    setInterval(function(){
+      var videoTime, sectionIdx, sectionEnd, in_watched_segment, end_of_current_segment, i$, ref$, len$, ref1$, start, end;
+      videoTime = getVideoTime();
+      sectionIdx = getSectionIdxByTime(videoTime);
+      sectionEnd = getSectionByIdx(sectionIdx).end;
+      in_watched_segment = false;
+      end_of_current_segment = 0;
+      for (i$ = 0, len$ = (ref$ = getWatchedSegments()).length; i$ < len$; ++i$) {
+        ref1$ = ref$[i$], start = ref1$[0], end = ref1$[1];
+        if (start <= videoTime && videoTime <= (ref1$ = videoTime + 3) && ref1$ <= end) {
+          in_watched_segment = true;
+          end_of_current_segment = end;
+        }
+      }
+      if (in_watched_segment && end_of_current_segment < sectionEnd) {
+        console.log('');
+        return $('#jump_button').text('Skip part I have already watched');
+      } else {
+        return $('#jump_button').text('Skip rest of section');
+      }
+    }, 100);
+    $('#jump_button').click(function(){
+      return jumpButtonClicked();
+    });
+    $('#overlay').click(function(){
+      return $('#overlay').hide();
+    });
+    $('.priority_button').click(function(){
+      var priority;
+      priority = parseInt($(this).attr('priority'));
+      return priority_button_clicked(priority);
+    });
     $('#rewatch_button').click(function(){
       var section;
       root.automaticSeeking = true;
@@ -516,6 +717,11 @@
       if (root.automaticSeeking) {
         return;
       }
+      if (root.mode === Modes.VIEW) {
+        if (getSectionIdxByTime(videoTime) > root.current_section_idx) {
+          showReview(root.current_section_idx);
+        }
+      }
       fraction = videoTime / root.videoDuration;
       return setProgressTickToFraction(fraction);
     }, 100);
@@ -531,13 +737,13 @@
         progress_marker = ref$[i$];
         marker_fraction = parseFloat($(progress_marker).attr('fraction'));
         marker_section = parseInt($(progress_marker).attr('section_idx'));
-        if (marker_fraction - 0.01 <= fraction && fraction <= marker_fraction + 0.01) {
+        if (marker_fraction - 0.005 <= fraction && fraction <= marker_fraction + 0.005) {
           fraction = marker_fraction;
           section_idx = marker_section;
           at_boundary = true;
         }
       }
-      if (false) {
+      if (at_boundary) {
         return showPreview(section_idx);
       } else {
         time_in_video = root.videoDuration * fraction;
@@ -581,7 +787,7 @@
       $('#questionbar').text(section_metadata.summary);
       $('#questionbar').show();
       $('#thumbnails').show();
-      setSeekThumbnailsToSectionIdx(section_idx, time_in_video);
+      setSeekThumbnailsToTime(time_in_video);
       return setSeekProgressTickToFraction(fraction);
     });
     $('#historybar').mousemove(function(evt){
@@ -601,7 +807,7 @@
       $('#questionbar').text(section_metadata.summary);
       $('#questionbar').show();
       $('#thumbnails').show();
-      setSeekThumbnailsToSectionIdx(section_idx, time_in_video);
+      setSeekThumbnailsToTime(time_in_video);
       return setSeekProgressTickToFraction(fraction);
     });
     $(document).mousedown(function(evt){
@@ -654,8 +860,8 @@
       if (overlayw > 0 && overlayh > 0) {
         $('#overlay').show();
         $('#overlay').show();
-        $('#overlay').width(overlayw);
-        $('#overlay').height(overlayh);
+        $('#overlay').css('width', overlayw);
+        $('#overlay').css('height', overlayh);
         xp = 100 * root.startX / root.videoWidth;
         yp = 100 * root.startY / root.videoHeight;
         wp = 100 * overlayw / root.videoWidth;
@@ -696,16 +902,20 @@
           continueClicked();
         } else if (showingPreview()) {
           watchClicked();
+        } else {
+          jumpButtonClicked();
         }
       }
       if (key === 32) {
         togglePlay();
       }
       if (key === 37) {
-        seekTo(getVideoTime() - 5);
+        seekTo(getVideoTime() - 3);
+        setPlaying(true);
       }
       if (key === 39) {
-        return seekTo(getVideoTime() + 5);
+        seekTo(getVideoTime() + 3);
+        return setPlaying(true);
       }
     });
     function fn$(){
@@ -717,6 +927,7 @@
     }
   };
   root.video_file = null;
+  root.quizmode = false;
   getUrlParameters = function(){
     var output, parts;
     output = {};
@@ -737,6 +948,7 @@
     if (params.metadata != null) {
       metadata_file = params.metadata;
     }
+    root.quizmode = true;
     $('#viewer').attr('src', video_file);
     return $('#viewer').on('loadedmetadata', function(){
       return $.get(metadata_file, function(data){

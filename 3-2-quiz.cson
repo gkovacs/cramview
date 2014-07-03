@@ -1,7 +1,9 @@
 [
   {
-    "time": 44.59505,
-    "overlays": [
+    "start": 0.0,
+    "end": 45.37,
+    "summary": "whitespace is insignificant in FORTRAN",
+    "quizzes": [
       {
         "x": 33.229166666666664,
         "y": 15.555555555555555,
@@ -11,8 +13,10 @@
     ]
   }
   {
-    "time": 323.567326,
-    "overlays": [
+    "start": 45.37,
+    "end": 323.85,
+    "summary": "example of problems in lexical analysis due to insignificant whitespace in FORTRAN",
+    "quizzes": [
       {
         "x": 11.458333333333334,
         "y": 53.888888888888886,
@@ -22,8 +26,10 @@
     ]
   }
   {
-    "time": 363.261449,
-    "overlays": [
+    "start": 323.85,
+    "end": 364.6,
+    "summary": "what is lookahead?",
+    "quizzes": [
       {
         "x": 37.1875,
         "y": 25.555555555555557,
@@ -39,8 +45,10 @@
     ]
   }
   {
-    "time": 434.922018,
-    "overlays": [
+    "start": 364.6,
+    "end": 436.3,
+    "summary": "example of lookahead in an if-else statement",
+    "quizzes": [
       {
         "x": 16.145833333333332,
         "y": 14.814814814814815,
@@ -50,8 +58,23 @@
     ]
   }
   {
-    "time": 630.131029,
-    "overlays": [
+    "start": 436.3,
+    "end": 538.6,
+    "summary": "keywords are not reserved in PL/1",
+    "quizzes": [
+      {
+        "x": 34.375,
+        "y": 16.666666666666668,
+        "w": 21.5625,
+        "h": 6.111111111111111
+      }
+    ]
+  }
+  {
+    "start": 538.6,
+    "end": 631,
+    "summary": "example of unbounded lookahead in PL/1 due to lack of reserved keywords",
+    "quizzes": [
       {
         "x": 29.166666666666668,
         "y": 69.25925925925925,
@@ -61,8 +84,10 @@
     ]
   }
   {
-    "time": 751.741818,
-    "overlays": [
+    "start": 631,
+    "end": 751.741818,
+    "summary": "example of lexical ambiguity between C++ templates and stream operators",
+    "quizzes": [
       {
         "x": 62.8125,
         "y": 78.33333333333333,
@@ -72,8 +97,10 @@
     ]
   }
   {
-    "time": 781.109936,
-    "overlays": [
+    "start": 751.741818,
+    "end": 781.109936,
+    "summary": "in summary, lexical analysis sometimes requires lookahead",
+    "quizzes": [
       {
         "x": 41.666666666666664,
         "y": 64.44444444444444,
