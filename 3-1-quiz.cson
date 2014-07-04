@@ -1,0 +1,85 @@
+[
+  {
+    end: '0:25'
+    summary: 'review of previous lecture'
+    slides: [
+      #{
+      #  start: '0:00'
+      #  thumbnail_time: '0:08'
+      #  end: '0:09'
+      #}
+      {
+        #start: '0:09'
+        start: '0:00'
+        thumbnail_time: '0:20'
+        end: '0:25'
+      }
+    ]
+  }
+  {
+    end: '1:47'
+    summary: 'what is the purpose of lexical analysis?'
+    slides: [
+      {
+        start: '0:25'
+        thumbnail_time: '1:44'
+        end: '1:47'
+      }
+    ]
+  }
+  {
+    end: '3:05'
+    summary: 'what is a token class?'
+    slides: [
+      {
+        start: '1:47'
+        thumbnail_time: '3:02'
+        end: '3:05'
+      }
+    ]
+  }
+  {
+    end: '5:01'
+    summary: 'what are identifiers, integers, keywords, and whitespace?'
+    slides: [
+      {
+        start: '3:05'
+        thumbnail_time: '4:59'
+        end: '5:01'
+      }
+    ]
+  }
+  {
+    end: '7:22'
+    summary: 'what does a lexical analyzer do?'
+    slides: [
+      {
+        start: '5:01'
+        thumbnail_time: '7:21'
+        end: '7:22'
+      }
+    ]
+  }
+  {
+    end: '11:23'
+    summary: 'example of lexical analysis'
+    slides: [
+      {
+        start: '7:22'
+        thumbnail_time: '11:22'
+        end: '11:23'
+      }
+    ]
+  }
+  {
+    end: '12:05'
+    summary: 'summary of lexical analysis'
+    slides: [
+      {
+        start: '11:24'
+        thumbnail_time: '12:04'
+        end: '12:04'
+      }
+    ]
+  }
+]

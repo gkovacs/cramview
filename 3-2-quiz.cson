@@ -1,6 +1,5 @@
 [
   {
-    "start": 0.0,
     "end": 45.37,
     "summary": "whitespace is insignificant in FORTRAN",
     "quizzes": [
@@ -13,7 +12,6 @@
     ]
   }
   {
-    "start": 45.37,
     "end": 323.85,
     "summary": "example of problems in lexical analysis due to insignificant whitespace in FORTRAN",
     "quizzes": [
@@ -26,7 +24,6 @@
     ]
   }
   {
-    "start": 323.85,
     "end": 364.6,
     "summary": "what is lookahead?",
     "quizzes": [
@@ -45,7 +42,6 @@
     ]
   }
   {
-    "start": 364.6,
     "end": 436.3,
     "summary": "example of lookahead in an if-else statement",
     "quizzes": [
@@ -58,7 +54,6 @@
     ]
   }
   {
-    "start": 436.3,
     "end": 538.6,
     "summary": "keywords are not reserved in PL/1",
     "quizzes": [
@@ -71,7 +66,6 @@
     ]
   }
   {
-    "start": 538.6,
     "end": 631,
     "summary": "example of unbounded lookahead in PL/1 due to lack of reserved keywords",
     "quizzes": [
@@ -84,7 +78,6 @@
     ]
   }
   {
-    "start": 631,
     "end": 751.741818,
     "summary": "example of lexical ambiguity between C++ templates and stream operators",
     "quizzes": [
@@ -97,7 +90,6 @@
     ]
   }
   {
-    "start": 751.741818,
     "end": 781.109936,
     "summary": "in summary, lexical analysis sometimes requires lookahead",
     "quizzes": [

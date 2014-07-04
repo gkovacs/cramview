@@ -19,11 +19,15 @@ toSeconds = (time) ->
 
 processAnnotations = (data) ->
   output = []
+  prev_end = 0
   for child in data
     if child.start?
       child.start = toSeconds(child.start)
     if child.end?
       child.end = toSeconds(child.end)
+      if not child.start?
+        child.start = prev_end
+        prev_end = child.end
     if child.thumbnail_time?
       child.thumbnail_time = toSeconds(child.thumbnail_time)
     if child.slides?
@@ -396,7 +400,6 @@ showPreview = root.showPreview = (section_idx) ->
   root.current_section_idx = section_idx
   section = root.annotations[section_idx]
   quizzes = section.quizzes
-  overlay = quizzes[0]
   setVideoTime(section.start)
   $('#now_button').show()
   $('#reviewcaption').text $('#reviewcaption').attr('preview_text')
@@ -407,6 +410,9 @@ showPreview = root.showPreview = (section_idx) ->
   thumbnail_y = 3 #$('#review_thumbnail_0').offset().top + 3
   thumbnail_width = root.thumbnail_width #$('#review_thumbnail_0').width()
   thumbnail_height = root.thumbnail_height #$('#review_thumbnail_0').height()
+  if not section.quizzes?
+    return
+  overlay = quizzes[0]
   $('#overlay').css {
     width: overlay.w * thumbnail_width / 100.0
     height: overlay.h * thumbnail_height / 100.0
@@ -422,7 +428,6 @@ showReview = root.showReview = (section_idx) ->
   root.current_section_idx = section_idx
   section = root.annotations[section_idx]
   quizzes = section.quizzes
-  overlay = quizzes[0]
   setVideoTime(section.end)
   $('#now_button').hide()
   $('#reviewcaption').text $('#reviewcaption').attr('review_text')
@@ -433,6 +438,9 @@ showReview = root.showReview = (section_idx) ->
   thumbnail_y = 3 #$('#review_thumbnail_0').offset().top + 3
   thumbnail_width = root.thumbnail_width #$('#review_thumbnail_0').width()
   thumbnail_height = root.thumbnail_height #$('#review_thumbnail_0').height()
+  if not section.quizzes?
+    return
+  overlay = quizzes[0]
   $('#overlay').css {
     width: overlay.w * thumbnail_width / 100.0
     height: overlay.h * thumbnail_height / 100.0
@@ -464,11 +472,27 @@ setSectionPriorityMarker = root.setSectionPriorityMarker = (section_idx, priorit
   priority_marker.css('margin-left', 5)
   priority_marker.text(priority_name)
 
+/*
+setSectionPriorityBackground = root.setSectionPriorityBackground = (section_idx, priority) ->
+  priority_to_color = {
+    0: '#940000'
+    1: '#94008a'
+    2: '#006594'
+    3: '#00946c'
+    4: '#4cff24'
+  }
+  priority_color = priority_to_color[priority]
+*/
+
 nextIdxLoop = root.nextIdxLoop = (cur_idx) ->
   cur_idx = cur_idx + 1
   if cur_idx >= annotations.length
     cur_idx = 0
   return cur_idx
+
+setSectionPriority = (cur_idx, priority) ->
+  root.section_to_priority[cur_idx] = priority
+  setSectionPriorityMarker(cur_idx, priority)
 
 skipToNextSection = root.skipToNextSection = ->
   cur_idx = nextIdxLoop root.current_section_idx
@@ -477,17 +501,19 @@ skipToNextSection = root.skipToNextSection = ->
     priority = root.section_to_priority[cur_idx]
     if priority == Priorities.SOON
       break
+    else if priority == Priorities.NEVER
+      cur_idx = nextIdxLoop cur_idx
     else if priority == Priorities.LATER
-      root.section_to_priority[cur_idx] = Priorities.SOON
-    cur_idx = nextIdxLoop cur_idx
+      console.log 'skipping over later priority'
+      setSectionPriority cur_idx, Priorities.SOON
+      cur_idx = nextIdxLoop cur_idx
   return cur_idx
 
 priority_button_clicked = (priority) ->
   console.log 'priority:' + priority
   console.log 'mode:' + root.mode
   console.log 'preview mode:' + Modes.PREVIEW
-  root.section_to_priority[root.current_section_idx] = priority
-  setSectionPriorityMarker(root.current_section_idx, priority)
+  setSectionPriority root.current_section_idx, priority
   if root.mode == Modes.PREVIEW
     if priority == Priorities.NOW
       console.log 'hide preview'
@@ -699,6 +725,7 @@ setupViewer = ->
       left: root.startX
       top: root.startY
     }
+    $('#overlay').show()
     #console.log $('#overlay').offset()
   $(document).mouseup (evt) ->
     root.isMouseDown = false

@@ -1,5 +1,5 @@
 (function(){
-  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, getUrlParameters;
+  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, setSectionPriority, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, getUrlParameters;
   root = typeof exports != 'undefined' && exports !== null ? exports : this;
   toSeconds = function(time){
     var timeParts, res$, i$, ref$, len$, x;
@@ -32,8 +32,9 @@
     return null;
   };
   processAnnotations = function(data){
-    var output, i$, len$, child;
+    var output, prev_end, i$, len$, child;
     output = [];
+    prev_end = 0;
     for (i$ = 0, len$ = data.length; i$ < len$; ++i$) {
       child = data[i$];
       if (child.start != null) {
@@ -41,6 +42,10 @@
       }
       if (child.end != null) {
         child.end = toSeconds(child.end);
+        if (child.start == null) {
+          child.start = prev_end;
+          prev_end = child.end;
+        }
       }
       if (child.thumbnail_time != null) {
         child.thumbnail_time = toSeconds(child.thumbnail_time);
@@ -487,14 +492,13 @@
   };
   root.mode = Modes.PREVIEW;
   showPreview = root.showPreview = function(section_idx){
-    var section, quizzes, overlay, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height;
+    var section, quizzes, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height, overlay;
     setPlaying(false);
     $('#view_area').hide();
     root.mode = Modes.PREVIEW;
     root.current_section_idx = section_idx;
     section = root.annotations[section_idx];
     quizzes = section.quizzes;
-    overlay = quizzes[0];
     setVideoTime(section.start);
     $('#now_button').show();
     $('#reviewcaption').text($('#reviewcaption').attr('preview_text'));
@@ -505,6 +509,10 @@
     thumbnail_y = 3;
     thumbnail_width = root.thumbnail_width;
     thumbnail_height = root.thumbnail_height;
+    if (section.quizzes == null) {
+      return;
+    }
+    overlay = quizzes[0];
     $('#overlay').css({
       width: overlay.w * thumbnail_width / 100.0,
       height: overlay.h * thumbnail_height / 100.0,
@@ -514,14 +522,13 @@
     return $('#overlay').show();
   };
   showReview = root.showReview = function(section_idx){
-    var section, quizzes, overlay, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height;
+    var section, quizzes, thumbnail_x, thumbnail_y, thumbnail_width, thumbnail_height, overlay;
     setPlaying(false);
     $('#view_area').hide();
     root.mode = Modes.REVIEW;
     root.current_section_idx = section_idx;
     section = root.annotations[section_idx];
     quizzes = section.quizzes;
-    overlay = quizzes[0];
     setVideoTime(section.end);
     $('#now_button').hide();
     $('#reviewcaption').text($('#reviewcaption').attr('review_text'));
@@ -532,6 +539,10 @@
     thumbnail_y = 3;
     thumbnail_width = root.thumbnail_width;
     thumbnail_height = root.thumbnail_height;
+    if (section.quizzes == null) {
+      return;
+    }
+    overlay = quizzes[0];
     $('#overlay').css({
       width: overlay.w * thumbnail_width / 100.0,
       height: overlay.h * thumbnail_height / 100.0,
@@ -565,12 +576,27 @@
     priority_marker.css('margin-left', 5);
     return priority_marker.text(priority_name);
   };
+  /*
+  setSectionPriorityBackground = root.setSectionPriorityBackground = (section_idx, priority) ->
+    priority_to_color = {
+      0: '#940000'
+      1: '#94008a'
+      2: '#006594'
+      3: '#00946c'
+      4: '#4cff24'
+    }
+    priority_color = priority_to_color[priority]
+  */
   nextIdxLoop = root.nextIdxLoop = function(cur_idx){
     cur_idx = cur_idx + 1;
     if (cur_idx >= annotations.length) {
       cur_idx = 0;
     }
     return cur_idx;
+  };
+  setSectionPriority = function(cur_idx, priority){
+    root.section_to_priority[cur_idx] = priority;
+    return setSectionPriorityMarker(cur_idx, priority);
   };
   skipToNextSection = root.skipToNextSection = function(){
     var cur_idx, ref$, priority;
@@ -579,10 +605,13 @@
       priority = root.section_to_priority[cur_idx];
       if (priority === Priorities.SOON) {
         break;
+      } else if (priority === Priorities.NEVER) {
+        cur_idx = nextIdxLoop(cur_idx);
       } else if (priority === Priorities.LATER) {
-        root.section_to_priority[cur_idx] = Priorities.SOON;
+        console.log('skipping over later priority');
+        setSectionPriority(cur_idx, Priorities.SOON);
+        cur_idx = nextIdxLoop(cur_idx);
       }
-      cur_idx = nextIdxLoop(cur_idx);
     }
     return cur_idx;
   };
@@ -591,8 +620,7 @@
     console.log('priority:' + priority);
     console.log('mode:' + root.mode);
     console.log('preview mode:' + Modes.PREVIEW);
-    root.section_to_priority[root.current_section_idx] = priority;
-    setSectionPriorityMarker(root.current_section_idx, priority);
+    setSectionPriority(root.current_section_idx, priority);
     if (root.mode === Modes.PREVIEW) {
       if (priority === Priorities.NOW) {
         console.log('hide preview');
@@ -823,12 +851,13 @@
       root.startX = evt.clientX;
       root.startY = evt.clientY;
       console.log(root.startX + ',' + root.startY);
-      return $('#overlay').css({
+      $('#overlay').css({
         width: 0,
         height: 0,
         left: root.startX,
         top: root.startY
       });
+      return $('#overlay').show();
     });
     $(document).mouseup(function(evt){
       root.isMouseDown = false;
