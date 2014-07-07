@@ -410,6 +410,10 @@ showPreview = root.showPreview = (section_idx) ->
   thumbnail_y = 3 #$('#review_thumbnail_0').offset().top + 3
   thumbnail_width = root.thumbnail_width #$('#review_thumbnail_0').width()
   thumbnail_height = root.thumbnail_height #$('#review_thumbnail_0').height()
+  if section.question?
+    $('#review_thumbnails').hide()
+    $('#reviewquestion').text section.question
+    return
   if not section.quizzes?
     return
   overlay = quizzes[0]
@@ -438,6 +442,10 @@ showReview = root.showReview = (section_idx) ->
   thumbnail_y = 3 #$('#review_thumbnail_0').offset().top + 3
   thumbnail_width = root.thumbnail_width #$('#review_thumbnail_0').width()
   thumbnail_height = root.thumbnail_height #$('#review_thumbnail_0').height()
+  if section.question?
+    $('#review_thumbnails').hide()
+    $('#reviewquestion').text section.question
+    return
   if not section.quizzes?
     return
   overlay = quizzes[0]
@@ -448,6 +456,7 @@ showReview = root.showReview = (section_idx) ->
     top: thumbnail_y + overlay.y * thumbnail_height / 100.0
   }
   $('#overlay').show()
+
 
 setSectionPriorityMarker = root.setSectionPriorityMarker = (section_idx, priority) ->
   priority_to_name = {

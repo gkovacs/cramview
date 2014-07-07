@@ -65,10 +65,10 @@ app.get '/thumbnail', (req, res) ->
   thumbnail_path = 'thumbnails/' + thumbnail_file
   console.log thumbnail_path
   if fs.existsSync(thumbnail_path)
-    servePng(thumbnail_path, res)
+    res.sendfile thumbnail_path
   else
     makeSnapshot video, time, thumbnail_path, width, height, ->
-      servePng(thumbnail_path, res)
+      res.sendfile thumbnail_path
 
 app.get '/overlay', (req, res) ->
   video = req.query.video

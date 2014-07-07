@@ -2,6 +2,7 @@
   {
     "end": 45.37,
     "summary": "whitespace is insignificant in FORTRAN",
+    "question": "Is FORTRAN whitespace-significant?",
     "quizzes": [
       {
         "x": 33.229166666666664,
@@ -14,6 +15,7 @@
   {
     "end": 323.85,
     "summary": "example of problems in lexical analysis due to insignificant whitespace in FORTRAN",
+    "question": "How much lookahead is required to tokenize DO 5 1 = 1.25 in FORTRAN?",
     "quizzes": [
       {
         "x": 11.458333333333334,
@@ -26,6 +28,7 @@
   {
     "end": 364.6,
     "summary": "what is lookahead?",
+    "question": "What is lookahead?",
     "quizzes": [
       {
         "x": 37.1875,
@@ -44,6 +47,7 @@
   {
     "end": 436.3,
     "summary": "example of lookahead in an if-else statement",
+    "question": "How much lookahead is required to tokenize if-else statements in FORTRAN?",
     "quizzes": [
       {
         "x": 16.145833333333332,
@@ -56,6 +60,7 @@
   {
     "end": 538.6,
     "summary": "keywords are not reserved in PL/1",
+    "question": "Are keywords reserved in PL/1?",
     "quizzes": [
       {
         "x": 34.375,
@@ -68,6 +73,7 @@
   {
     "end": 631,
     "summary": "example of unbounded lookahead in PL/1 due to lack of reserved keywords",
+    "question": "How much lookahead is required to tokenize a DECLARE statement in PL/1?",
     "quizzes": [
       {
         "x": 29.166666666666668,
@@ -80,6 +86,7 @@
   {
     "end": 751.741818,
     "summary": "example of lexical ambiguity between C++ templates and stream operators",
+    "question": "Why do C++ compilers fail to correctly tokenize Foo<Bar<Bazz>>?",
     "quizzes": [
       {
         "x": 62.8125,
@@ -92,6 +99,7 @@
   {
     "end": 781.109936,
     "summary": "in summary, lexical analysis sometimes requires lookahead",
+    "question": "What is the goal of lexical analysis?",
     "quizzes": [
       {
         "x": 41.666666666666664,

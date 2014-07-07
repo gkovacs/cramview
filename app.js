@@ -80,10 +80,10 @@
     thumbnail_path = 'thumbnails/' + thumbnail_file;
     console.log(thumbnail_path);
     if (fs.existsSync(thumbnail_path)) {
-      return servePng(thumbnail_path, res);
+      return res.sendfile(thumbnail_path);
     } else {
       return makeSnapshot(video, time, thumbnail_path, width, height, function(){
-        return servePng(thumbnail_path, res);
+        return res.sendfile(thumbnail_path);
       });
     }
   });

@@ -509,6 +509,11 @@
     thumbnail_y = 3;
     thumbnail_width = root.thumbnail_width;
     thumbnail_height = root.thumbnail_height;
+    if (section.question != null) {
+      $('#review_thumbnails').hide();
+      $('#reviewquestion').text(section.question);
+      return;
+    }
     if (section.quizzes == null) {
       return;
     }
@@ -539,6 +544,11 @@
     thumbnail_y = 3;
     thumbnail_width = root.thumbnail_width;
     thumbnail_height = root.thumbnail_height;
+    if (section.question != null) {
+      $('#review_thumbnails').hide();
+      $('#reviewquestion').text(section.question);
+      return;
+    }
     if (section.quizzes == null) {
       return;
     }
