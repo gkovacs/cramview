@@ -2,51 +2,31 @@ doctype html
 html(lang="en")
   head
     title quiz view
-    link(href='index.css', rel='stylesheet')
-    link(href='css/bootstrap.min.css', rel='stylesheet')
-    link(href='css/bootstrap-theme.min.css', rel='stylesheet')
+    link(href='index.css' rel='stylesheet')
+    link(href='bower_components/bootstrap/dist/css/bootstrap.min.css' rel='stylesheet')
+    link(href='bower_components/bootstrap/dist/css/bootstrap-theme.min.css' rel='stylesheet')
+    link(href='bower_components/seiyria-bootstrap-slider/css/bootstrap-slider.css' rel='stylesheet')
+    //-link(href='bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css', rel='stylesheet')
   body
-    script(src='jquery-2.1.1.min.js')
-    script(src='js/bootstrap.min.js')
+    script(src='bower_components/jquery/dist/jquery.min.js')
+    script(src='bower_components/bootstrap/dist/js/bootstrap.min.js')
+    //-script(src='bower_components/jquery-ui/jquery-ui.min.js')
+    script(src='bower_components/jadeDom/jquery.jadedom.js')
+    script(src='bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js')
     script(src='index.js')
-    #view_area(style='position: relative; display: inline-block')
-      video#viewer
-      button#jump_button(class='btn btn-default btn-lg', style='position: absolute; bottom: 30px; right: 40px; z-index: 10') Skip section
-    #preview_area
-      #previewmessage(style='color: black; font-size: 12px; margin-left: 20px; margin-top: 20px') This section will be about:
-      #previewquestion(style='color: black; font-size: 24px; margin-left: 20px; margin-bottom: 10px')
-      #preview_thumbnails
-        img#preview_thumbnail_0
-        img#preview_thumbnail_1
-      #previewbuttongroup
-        button#watch_button(type='button' class='btn btn-default btn-lg', buttontext='Watch this section') Watch this section
-        button#skip_button(type='button' class='btn btn-default btn-lg') Skip this section
-        div#watch_label(style='color: black; font-size: 24px') Do you want to watch this section?
-    #review_area
-      #reviewcaption(style='color: black; font-size: 12px; margin-left: 20px; margin-top: 20px', review_text='You just finished watching this section. How well did you understand it?', preview_text='This is the next section. How well do you understand it?') You just finished watching this section:
-      #reviewquestion(style='color: black; font-size: 24px; margin-left: 20px; margin-bottom: 10px')
-      #review_thumbnails
-        div(style='position: relative')
-          img#review_thumbnail_0(src='white_thumbnail_640x360.png')
-          #overlay(style='display: none') Click to reveal answer
-        img#review_thumbnail_1
-      #reviewbuttongroup
-        button#continue_button(type='button', class='btn btn-default btn-lg', buttontext='Continue to next section', style='display: none') Continue to next section
-        button#rewatch_button(type='button', class='btn btn-default btn-lg', style='display: none') Rewatch section
-        button#now_button(type='button', priority='1', class='priority_button btn btn-default btn-lg') Now
-        button#soon_button(type='button', priority='2', class='priority_button btn btn-default btn-lg') Soon
-        button#later_button(type='button', priority='3', class='priority_button btn btn-default btn-lg') Later
-        button#never_button(type='button', priority='4', class='priority_button btn btn-default btn-lg') Never
-        #rewatch_label(style='color: black; font-size: 24px', review_text='When do you want to review this section?', preview_text='When do you want to view this section?') When do you want to view this section?
-    #thumbnails(style='display: none')
-      img.prevthumbnail#thumbnail_0
-      img.prevthumbnail#thumbnail_1
-    #questionbar
-    #controls_and_scrollbar
-      img#playpause(src='play.png')
-      #scrollbar
-        #seekprogresstick
-        #progresstick
-    #historybar
-    a#urldisplay
-    pre#jsondisplay(style='padding: 0; margin: 0', onclick='selectText("jsondisplay")')
+    p How well can you answer each of these questions?
+    #accordion.panel-group
+    button.btn.btn-default.btn-lg(type='button' onclick='review_clicked()') Review
+      //- .panel.panel-default
+      //-   .panel-heading
+      //-     h4.panel-title
+      //-       a(data-toggle='collapse' href='#collapse_1') Collapsible Group Item 1
+      //-   #collapse_1.panel-collapse.collapse.in
+      //-     .panel-body Content 1
+      //- .panel.panel-default
+      //-   .panel-heading
+      //-     h4.panel-title
+      //-       a(data-toggle='collapse' href='#collapse_2') Collapsible Group Item 2
+      //-   #collapse_2.panel-collapse.collapse.in
+      //-     .panel-body Content 2
+    video#viewer(style='display: none')

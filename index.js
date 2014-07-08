@@ -1,6 +1,7 @@
 (function(){
-  var root, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, setSectionPriority, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, getUrlParameters;
+  var root, J, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, setSectionPriority, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, nanToZero, review_clicked, setupViewer2, getUrlParameters;
   root = typeof exports != 'undefined' && exports !== null ? exports : this;
+  J = $.jade;
   toSeconds = function(time){
     var timeParts, res$, i$, ref$, len$, x;
     if (time == null) {
@@ -672,6 +673,73 @@
     }
   };
   setupViewer = function(){
+    var i$, ref$, len$, idx, section, header, footer, cursec, results$ = [];
+    console.log('viewer set up');
+    for (i$ = 0, len$ = (ref$ = annotations).length; i$ < len$; ++i$) {
+      idx = i$;
+      section = ref$[i$];
+      console.log(section);
+      header = J('.panel-heading').append(J('h4.panel-title').append([J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_" + idx), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a#title_text_" + idx + "(data-toggle='collapse' href='#collapse_" + idx + "')").text(section.question)]));
+      footer = J("#collapse_" + idx + ".panel-collapse.collapse.in").append(J('.panel-body').append(J('video').attr('controls', 'controls').attr('src', 'segmentvideo?' + $.param({
+        video: root.video_file,
+        start: section.start,
+        end: section.end
+      }))));
+      cursec = J('.panel.panel-default').append([header, footer]);
+      $('#accordion').append(cursec);
+      $("#collapse_" + idx).collapse('hide');
+      $("#slider_" + idx).slider({
+        formatter: fn$,
+        tooltip: 'show'
+      });
+      $("#slider_" + idx).slide;
+      results$.push($("#slider_" + idx).parent().find('.slider-selection').css('background', '#BABABA'));
+    }
+    return results$;
+    function fn$(value){
+      return value;
+    }
+  };
+  nanToZero = function(num){
+    if (num != null && !isNaN(num)) {
+      return num;
+    }
+    return 0;
+  };
+  review_clicked = root.review_clicked = function(){
+    var slider_values_and_idx, res$, i$, ref$, len$, idx, slider, bottom_values_and_idx, indexes_to_review_set, value, results$ = [];
+    console.log('review clicked');
+    res$ = [];
+    for (i$ = 0, len$ = (ref$ = $('.slider_input')).length; i$ < len$; ++i$) {
+      idx = i$;
+      slider = ref$[i$];
+      res$.push([nanToZero(parseInt(slider.value)), idx]);
+    }
+    slider_values_and_idx = res$;
+    slider_values_and_idx = slider_values_and_idx.sort();
+    bottom_values_and_idx = [slider_values_and_idx[0], slider_values_and_idx[1], slider_values_and_idx[2]];
+    res$ = {};
+    for (i$ = 0, len$ = bottom_values_and_idx.length; i$ < len$; ++i$) {
+      ref$ = bottom_values_and_idx[i$], value = ref$[0], idx = ref$[1];
+      res$[idx] = true;
+    }
+    indexes_to_review_set = res$;
+    for (i$ = 0, len$ = bottom_values_and_idx.length; i$ < len$; ++i$) {
+      ref$ = bottom_values_and_idx[i$], value = ref$[0], idx = ref$[1];
+      $("#collapse_" + idx).collapse('show');
+      $("#slider_" + idx).slider('setValue', Math.min(100, value + 10));
+      $("#title_text_" + idx).css('font-weight', 'bold');
+    }
+    for (i$ = 0, len$ = slider_values_and_idx.length; i$ < len$; ++i$) {
+      ref$ = slider_values_and_idx[i$], value = ref$[0], idx = ref$[1];
+      if (indexes_to_review_set[idx] == null) {
+        $("#collapse_" + idx).collapse('hide');
+        results$.push($("#title_text_" + idx).css('font-weight', 'normal'));
+      }
+    }
+    return results$;
+  };
+  setupViewer2 = function(){
     var res$, i$, ref$, len$, i;
     res$ = [];
     for (i$ = 0, len$ = (ref$ = (fn$())).length; i$ < len$; ++i$) {
@@ -977,6 +1045,7 @@
   };
   $(document).ready(function(){
     var params, video_file, metadata_file;
+    console.log('document ready 2');
     params = getUrlParameters();
     video_file = '3-1.mp4';
     if (params.video != null) {

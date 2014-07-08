@@ -1,4 +1,5 @@
 root = exports ? this
+J = $.jade
 
 toSeconds = (time) ->
   if not time?
@@ -558,6 +559,50 @@ jumpButtonClicked = root.jumpButtonClicked = ->
     showReview getSectionIdxByTime(videoTime)
 
 setupViewer = ->
+  console.log 'viewer set up'
+  for section,idx in annotations
+    console.log section
+    header = J('.panel-heading').append J('h4.panel-title').append [J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_#idx"), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a\#title_text_#idx(data-toggle='collapse' href='\#collapse_#idx')").text(section.question) ]
+    footer = J("\#collapse_#idx.panel-collapse.collapse.in").append J('.panel-body').append J('video').attr('controls', 'controls').attr('src', 'segmentvideo?' + $.param({video: root.video_file, start: section.start, end: section.end}))
+    cursec = J('.panel.panel-default').append [header, footer]
+    $('#accordion').append cursec
+    $("\#collapse_#idx").collapse 'hide'
+    $("\#slider_#idx").slider {
+      formatter: (value) -> value #'Current value: ' + value
+      tooltip: 'show' #'always'
+    }
+    $("\#slider_#idx").slide 
+    $("\#slider_#idx").parent().find('.slider-selection').css 'background' '#BABABA'
+    #header = $('<h2>').text(section.question).append "<input type='range' min='1' max='10' style='float: left; width: 100px'>"
+    #footer_video = $('<video>').attr('src', 'segmentvideo?' + $.param({video: root.video_file, start: section.start, end: section.end}))
+    #footer = $('<div>').append footer_video
+    #$('#accordion').append header
+    #$('#accordion').append footer
+  #$('#accordion').accordion {
+  #  heightStyle: 'content'
+  #}
+
+nanToZero = (num) ->
+  if num? and not isNaN(num)
+    return num
+  return 0
+
+review_clicked = root.review_clicked = ->
+  console.log 'review clicked'
+  slider_values_and_idx = [[nanToZero(parseInt(slider.value)),idx] for slider,idx in $('.slider_input')]
+  slider_values_and_idx = slider_values_and_idx.sort()
+  bottom_values_and_idx = slider_values_and_idx[0 til 3]
+  indexes_to_review_set = {[idx,true] for [value,idx] in bottom_values_and_idx}
+  for [value,idx] in bottom_values_and_idx
+    $("\#collapse_#idx").collapse 'show'
+    $("\#slider_#idx").slider 'setValue', Math.min(100, value+10)
+    $("\#title_text_#idx").css('font-weight', 'bold')
+  for [value,idx] in slider_values_and_idx
+    if not indexes_to_review_set[idx]?
+      $("\#collapse_#idx").collapse 'hide'
+      $("\#title_text_#idx").css('font-weight', 'normal')
+
+setupViewer2 = ->
   root.watched = [false for i in [0 to Math.round(root.videoDuration+0.5)]]
   addTicksToProgressBar()
   showPreview(0)
@@ -823,6 +868,7 @@ getUrlParameters = ->
   return output
 
 $(document).ready ->
+  console.log 'document ready 2'
   params = getUrlParameters()
   video_file = '3-1.mp4'
   if params.video?

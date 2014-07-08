@@ -39,14 +39,55 @@ toSeconds = (time) ->
       return timeParts[0]*3600 + timeParts[1]*60 + timeParts[2]
   return null
 
-servePng = (pngfile, res) ->
-  img = fs.readFileSync(pngfile)
-  res.writeHead(200, {'Content-Type': 'image/png'})
-  res.end(img, 'binary')
+spawn = require('child_process').spawn
+fs = require 'fs'
 
+callCommand = (command, options, callback) ->
+  ffmpeg = spawn command, options
+  ffmpeg.stdout.on 'data', (data) ->
+    console.log 'stdout:' + data
+  ffmpeg.stderr.on 'data', (data) ->
+    console.log 'stderr:' + data
+  ffmpeg.on 'exit', (code) ->
+    console.log 'exited with code:' + code
+    callback() if callback?
+
+makeSegment = (video, start, end, output, callback) ->
+  extra_options = []
+  if output.indexOf('.webm') != -1
+    extra_options = <[ -cpu-used -5 -deadline realtime ]>
+  if output.indexOf('.mp4') != -1
+    extra_options = <[ -codec:v libx264 -profile:v high -preset ultrafast -threads 0 -strict -2 -codec:a aac ]>
+  #  #extra_options = <[ -strict experimental ]>
+  #  #extra_options = <[ -codec:v libx264 -profile:v high -preset ultrafast -b:v 500k -maxrate 500k -bufsize 1000k -vf scale=-1:480 -threads 0 -codec:a aac ]>
+  command = './ffmpeg'
+  #command = 'avconv'
+  options = ['-ss', start, '-t', (end - start), '-i', video].concat extra_options.concat ['-y', output]
+  callCommand command, options, ->
+    callCommand 'qtfaststart', [output], callback
+
+serverRootStatic = 'http://10.172.99.34:80/'
+
+app.get '/segmentvideo', (req, res) ->
+  console.log 'segmentvideo'
+  video = req.query.video
+  start = req.query.start
+  end = req.query.end
+  video_base = video.split('.')[0]
+  video_path = video
+  output_file = video_base + '_' + start + '_' + end + '.mp4' #'.webm'
+  output_path = 'static/' + output_file
+  if fs.existsSync(output_path)
+    console.log serverRootStatic + output_path
+    res.redirect serverRootStatic + output_path
+    #res.sendfile output_path
+  else
+    makeSegment video_path, start, end, output_path, ->
+      #res.sendfile output_path
+      res.redirect serverRootStatic + output_path
 
 makeSnapshot = (video, time, thumbnail_path, width, height, callback) ->
-  command = 'avconv -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path
+  command = './ffmpeg -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path
   exec command, ->
     callback() if callback?
 

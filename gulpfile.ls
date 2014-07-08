@@ -21,9 +21,6 @@ gulp.task 'watch', ->
 
 gulp.task 'develop', ->
   gulp-nodemon {script: 'app.js', ext: 'jade ls styl'}
-  .on 'start', ['build']
-  .on 'change', ['build']
-  .on 'restart', ->
-    console.log 'restarted!'
+  .on 'restart', ['build']
 
-gulp.task 'default', ['develop']
+gulp.task 'default', ['build', 'develop']

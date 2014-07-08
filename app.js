@@ -1,5 +1,5 @@
 (function(){
-  var express, path, fs, app, exec, get_index, toSeconds, servePng, makeSnapshot;
+  var express, path, fs, app, exec, get_index, toSeconds, spawn, callCommand, makeSegment, serverRootStatic, makeSnapshot;
   express = require('express');
   path = require('path');
   fs = require('fs');
@@ -44,17 +44,62 @@
     }
     return null;
   };
-  servePng = function(pngfile, res){
-    var img;
-    img = fs.readFileSync(pngfile);
-    res.writeHead(200, {
-      'Content-Type': 'image/png'
+  spawn = require('child_process').spawn;
+  fs = require('fs');
+  callCommand = function(command, options, callback){
+    var ffmpeg;
+    ffmpeg = spawn(command, options);
+    ffmpeg.stdout.on('data', function(data){
+      return console.log('stdout:' + data);
     });
-    return res.end(img, 'binary');
+    ffmpeg.stderr.on('data', function(data){
+      return console.log('stderr:' + data);
+    });
+    return ffmpeg.on('exit', function(code){
+      console.log('exited with code:' + code);
+      if (callback != null) {
+        return callback();
+      }
+    });
   };
+  makeSegment = function(video, start, end, output, callback){
+    var extra_options, command, options;
+    extra_options = [];
+    if (output.indexOf('.webm') !== -1) {
+      extra_options = ['-cpu-used', '-5', '-deadline', 'realtime'];
+    }
+    if (output.indexOf('.mp4') !== -1) {
+      extra_options = ['-codec:v', 'libx264', '-profile:v', 'high', '-preset', 'ultrafast', '-threads', '0', '-strict', '-2', '-codec:a', 'aac'];
+    }
+    command = './ffmpeg';
+    options = ['-ss', start, '-t', end - start, '-i', video].concat(extra_options.concat(['-y', output]));
+    return callCommand(command, options, function(){
+      return callCommand('qtfaststart', [output], callback);
+    });
+  };
+  serverRootStatic = 'http://10.172.99.34:80/';
+  app.get('/segmentvideo', function(req, res){
+    var video, start, end, video_base, video_path, output_file, output_path;
+    console.log('segmentvideo');
+    video = req.query.video;
+    start = req.query.start;
+    end = req.query.end;
+    video_base = video.split('.')[0];
+    video_path = video;
+    output_file = video_base + '_' + start + '_' + end + '.mp4';
+    output_path = 'static/' + output_file;
+    if (fs.existsSync(output_path)) {
+      console.log(serverRootStatic + output_path);
+      return res.redirect(serverRootStatic + output_path);
+    } else {
+      return makeSegment(video_path, start, end, output_path, function(){
+        return res.redirect(serverRootStatic + output_path);
+      });
+    }
+  });
   makeSnapshot = function(video, time, thumbnail_path, width, height, callback){
     var command;
-    command = 'avconv -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path;
+    command = './ffmpeg -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path;
     return exec(command, function(){
       if (callback != null) {
         return callback();
