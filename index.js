@@ -1,5 +1,5 @@
 (function(){
-  var root, J, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, setSectionPriority, skipToNextSection, priority_button_clicked, jumpButtonClicked, setupViewer, nanToZero, review_clicked, setupViewer2, getUrlParameters;
+  var root, J, toSeconds, processAnnotations, isInElement, getSectionByIdx, getSlideByIdx, getSectionIdxByTime, getSlideIdxByTime, setThumbnailEmpty, setThumbnailWhiteNoBorder, setSeekThumbnailEmpty, setThumbnailNoBorder, setReviewThumbnailsToSectionIdx, setPreviewThumbnailsToSectionIdx, setThumbnail, setSeekThumbnail, setSeekThumbnailsToSectionIdx, setSeekThumbnailsToTime, getCssWidth, getScrollbarWidth, addTicksToProgressBar, markViewedSegments, getFractionHoverInScrollbar, setSeekProgressTickToFraction, setProgressTickToFraction, isPlaying, setPlaying, setVideoTime, getVideoTime, getVideoFraction, hideReview, hidePreview, showingQuiz, showingReview, showingPreview, setReviewCountdown, setPreviewCountdown, seekTo, continueClicked, watchClicked, togglePlay, getWatchedSegments, selectText, Priorities, Modes, showPreview, showReview, setSectionPriorityMarker, nextIdxLoop, setSectionPriority, skipToNextSection, priority_button_clicked, jumpButtonClicked, getCurPidx, getNextPidx, makeVideo, addCard, setupViewer, nanToZero, randn, shuffle, removeExcessCards, review_clicked, setupViewer2, getUrlParameters, slice$ = [].slice;
   root = typeof exports != 'undefined' && exports !== null ? exports : this;
   J = $.jade;
   toSeconds = function(time){
@@ -578,10 +578,8 @@
       priority_marker = $('#priority_marker_' + section_idx);
     }
     section = getSectionByIdx(section_idx);
-    console.log(section);
     fraction = section.start / root.videoDuration;
     position = fraction * getScrollbarWidth();
-    console.log(position);
     priority_marker.css('position', 'absolute');
     priority_marker.css('left', position + 'px');
     priority_marker.css('margin-left', 5);
@@ -672,33 +670,134 @@
       return showReview(getSectionIdxByTime(videoTime));
     }
   };
+  root.disableSlideUpdate = false;
+  root.curPidx = -1;
+  getCurPidx = root.getCurPidx = function(){
+    return root.curPidx;
+  };
+  getNextPidx = root.getNextPidx = function(){
+    root.curPidx += 1;
+    return root.curPidx;
+  };
+  makeVideo = function(idx){
+    var section, videoelem;
+    section = root.annotations[idx];
+    videoelem = J('video').attr('idx', idx).addClass("videogroup_" + idx).attr('controls', 'controls').attr('preload', 'auto').append(J('source')).attr('src', 'segmentvideo' + '?' + $.param({
+      video: root.video_file,
+      start: section.start,
+      end: section.end
+    }));
+    return J('div').append(videoelem);
+  };
+  root.video_viewers = [];
+  root.video_attachments = [];
+  root.reuse_videos = false;
+  addCard = root.addCard = function(idx, showCard, isInitialStack){
+    var pidx, section, header, footer, cursec, curval;
+    pidx = getNextPidx();
+    section = root.annotations[idx];
+    header = J("#cardtitle_" + pidx + ".panel-heading").append(J('h4.panel-title').append([J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_" + pidx).attr('pidx', pidx).addClass("slidergroup_" + idx), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a#title_text_" + pidx + "(data-toggle='collapse' href='#collapse_" + pidx + "')").text(section.question)]));
+    if (root.reuse_videos && root.video_viewers[idx] == null) {
+      root.video_viewers[idx] = makeVideo(idx);
+    }
+    footer = J("#collapse_" + pidx + ".panel-collapse.collapse").append(J("#video_container_" + pidx + ".panel-body"));
+    cursec = J("#card_" + pidx + ".cardgroup.panel.panel-default").append([header, footer]);
+    if (isInitialStack) {
+      $('#accordion_initial').append(cursec);
+    } else {
+      $('#accordion').append(cursec);
+    }
+    $("#collapse_" + pidx).on('show.bs.collapse', function(){
+      if (root.video_attachments[idx] !== pidx) {
+        if (root.reuse_videos) {
+          $('#collapse_' + root.video_attachments[idx]).collapse('hide');
+          root.video_viewers[idx].detach();
+          $("#video_container_" + pidx).append(root.video_viewers[idx]);
+          return root.video_attachments[idx] = pidx;
+        } else {
+          return $("#video_container_" + pidx).append(makeVideo(idx));
+        }
+      }
+    });
+    if (showCard) {
+      $("#collapse_" + pidx).collapse('show');
+    }
+    $("#slider_" + pidx).slider({
+      formatter: function(value){
+        return value;
+      },
+      tooltip: 'show'
+    });
+    if (!root.settingUpViewer) {
+      curval = $(root.sliders[idx]).slider('getValue');
+      $("#slider_" + pidx).slider('setValue', curval, false);
+    }
+    $("#slider_" + pidx).on('slide', function(){
+      var newval, i$, ref$, len$, slider, results$ = [];
+      if (root.disableSlideUpdate) {
+        return;
+      }
+      newval = parseInt($("#slider_" + pidx).slider('getValue'));
+      for (i$ = 0, len$ = (ref$ = $(".slidergroup_" + idx)).length; i$ < len$; ++i$) {
+        slider = ref$[i$];
+        if (pidx === parseInt($(slider).attr('pidx'))) {
+          continue;
+        }
+        root.disableSlideUpdate = true;
+        $(slider).slider('setValue', newval, false);
+        results$.push(root.disableSlideUpdate = false);
+      }
+      return results$;
+    });
+    return $("#slider_" + pidx).parent().find('.slider-selection').css('background', '#BABABA');
+  };
+  root.sliders = [];
+  root.settingUpViewer = true;
   setupViewer = function(){
-    var i$, ref$, len$, idx, section, header, footer, cursec, results$ = [];
+    var i$, ref$, len$, idx, section;
     console.log('viewer set up');
-    for (i$ = 0, len$ = (ref$ = annotations).length; i$ < len$; ++i$) {
+    for (i$ = 0, len$ = (ref$ = root.annotations).length; i$ < len$; ++i$) {
       idx = i$;
       section = ref$[i$];
-      console.log(section);
-      header = J('.panel-heading').append(J('h4.panel-title').append([J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_" + idx), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a#title_text_" + idx + "(data-toggle='collapse' href='#collapse_" + idx + "')").text(section.question)]));
-      footer = J("#collapse_" + idx + ".panel-collapse.collapse.in").append(J('.panel-body').append(J('video').attr('controls', 'controls').attr('src', 'segmentvideo?' + $.param({
-        video: root.video_file,
-        start: section.start,
-        end: section.end
-      }))));
-      cursec = J('.panel.panel-default').append([header, footer]);
-      $('#accordion').append(cursec);
-      $("#collapse_" + idx).collapse('hide');
-      $("#slider_" + idx).slider({
-        formatter: fn$,
-        tooltip: 'show'
-      });
-      $("#slider_" + idx).slide;
-      results$.push($("#slider_" + idx).parent().find('.slider-selection').css('background', '#BABABA'));
+      addCard(idx, false, true);
     }
-    return results$;
-    function fn$(value){
-      return value;
-    }
+    root.settingUpViewer = false;
+    root.sliders = slice$.call($('.slider_input'), 0, root.annotations.length);
+    /*
+    $(document).scroll (evt) ->
+      scroll_top = $(document).scrollTop()
+      document_height = $(document).height()
+      #console.log document_height
+      window_height = $(window).height()
+      #console.log window_height
+      scroll_fraction = scroll_top / (document_height - window_height)
+      console.log scroll_fraction
+      if scroll_fraction >= 1
+        review_clicked()
+      evt.preventDefault()
+      return false
+    */
+    return $(document).mousewheel(function(evt){
+      var scroll_top, document_height, window_height, scroll_fraction;
+      scroll_top = $(document).scrollTop();
+      document_height = $(document).height();
+      window_height = $(window).height();
+      scroll_fraction = scroll_top / (document_height - window_height);
+      if (evt.deltaY < 0 && (scroll_fraction >= 1 || isNaN(scroll_fraction))) {
+        review_clicked();
+        evt.stopImmediatePropagation();
+        evt.preventDefault();
+        return false;
+      }
+      evt.preventDefault();
+      evt.stopImmediatePropagation();
+      if (evt.deltaY <= 0) {
+        $(document).scrollTop(scroll_top + 20);
+      } else {
+        $(document).scrollTop(scroll_top - 20);
+      }
+      return false;
+    });
   };
   nanToZero = function(num){
     if (num != null && !isNaN(num)) {
@@ -706,39 +805,86 @@
     }
     return 0;
   };
+  randn = function(toplim){
+    return Math.floor(Math.random() * toplim);
+  };
+  shuffle = root.shuffle = function(aorig){
+    var a, i$, ref$, len$, i, j, ref1$;
+    a = slice$.call(aorig, 0);
+    for (i$ = 0, len$ = (ref$ = (fn$())).length; i$ < len$; ++i$) {
+      i = ref$[i$];
+      j = randn(i + 1);
+      ref1$ = [a[i], a[j]], a[j] = ref1$[0], a[i] = ref1$[1];
+    }
+    return a;
+    function fn$(){
+      var i$, results$ = [];
+      for (i$ = a.length - 1; i$ >= 1; --i$) {
+        results$.push(i$);
+      }
+      return results$;
+    }
+  };
+  removeExcessCards = function(){
+    var num_elements_to_remove;
+    num_elements_to_remove = $('#accordion').find('.cardgroup').length - 10;
+    console.log('removing excess cards:' + num_elements_to_remove);
+    if (num_elements_to_remove > 0) {
+      return $('#accordion').find('.cardgroup').slice(0, num_elements_to_remove).remove();
+    }
+  };
+  root.review_last_clicked_time = 0;
   review_clicked = root.review_clicked = function(){
-    var slider_values_and_idx, res$, i$, ref$, len$, idx, slider, bottom_values_and_idx, indexes_to_review_set, value, results$ = [];
+    var curTime, slider_values_and_idx, res$, i$, ref$, len$, idx, slider, bottom_values_and_idx, indexes_to_review_set, ref1$, value, showCard, pidx;
+    curTime = Date.now();
+    if (root.review_last_clicked_time + 2000 > curTime) {
+      return;
+    }
+    root.review_last_clicked_time = curTime;
     console.log('review clicked');
     res$ = [];
-    for (i$ = 0, len$ = (ref$ = $('.slider_input')).length; i$ < len$; ++i$) {
+    for (i$ = 0, len$ = (ref$ = root.sliders).length; i$ < len$; ++i$) {
       idx = i$;
       slider = ref$[i$];
       res$.push([nanToZero(parseInt(slider.value)), idx]);
     }
     slider_values_and_idx = res$;
     slider_values_and_idx = slider_values_and_idx.sort();
-    bottom_values_and_idx = [slider_values_and_idx[0], slider_values_and_idx[1], slider_values_and_idx[2]];
+    bottom_values_and_idx = [(ref$ = shuffle(slider_values_and_idx))[0], ref$[1], ref$[2]];
     res$ = {};
     for (i$ = 0, len$ = bottom_values_and_idx.length; i$ < len$; ++i$) {
-      ref$ = bottom_values_and_idx[i$], value = ref$[0], idx = ref$[1];
+      ref1$ = bottom_values_and_idx[i$], value = ref1$[0], idx = ref1$[1];
       res$[idx] = true;
     }
     indexes_to_review_set = res$;
     for (i$ = 0, len$ = bottom_values_and_idx.length; i$ < len$; ++i$) {
-      ref$ = bottom_values_and_idx[i$], value = ref$[0], idx = ref$[1];
-      $("#collapse_" + idx).collapse('show');
-      $("#slider_" + idx).slider('setValue', Math.min(100, value + 10));
-      $("#title_text_" + idx).css('font-weight', 'bold');
-    }
-    for (i$ = 0, len$ = slider_values_and_idx.length; i$ < len$; ++i$) {
-      ref$ = slider_values_and_idx[i$], value = ref$[0], idx = ref$[1];
-      if (indexes_to_review_set[idx] == null) {
-        $("#collapse_" + idx).collapse('hide');
-        results$.push($("#title_text_" + idx).css('font-weight', 'normal'));
+      ref1$ = bottom_values_and_idx[i$], value = ref1$[0], idx = ref1$[1];
+      showCard = false;
+      showCard = true;
+      addCard(idx, showCard, false);
+      pidx = getCurPidx();
+      if (showCard) {
+        $("#slider_" + pidx).slider('setValue', Math.min(100, value + 10));
       }
     }
-    return results$;
+    return removeExcessCards();
   };
+  /*
+  review_clicked = root.review_clicked = ->
+    console.log 'review clicked'
+    slider_values_and_idx = [[nanToZero(parseInt(slider.value)),idx] for slider,idx in $('.slider_input')]
+    slider_values_and_idx = slider_values_and_idx.sort()
+    bottom_values_and_idx = slider_values_and_idx[0 til 3]
+    indexes_to_review_set = {[idx,true] for [value,idx] in bottom_values_and_idx}
+    for [value,idx] in bottom_values_and_idx
+      $("\#collapse_#idx").collapse 'show'
+      $("\#slider_#idx").slider 'setValue', Math.min(100, value+10)
+      $("\#title_text_#idx").css('font-weight', 'bold')
+    for [value,idx] in slider_values_and_idx
+      if not indexes_to_review_set[idx]?
+        $("\#collapse_#idx").collapse 'hide'
+        $("\#title_text_#idx").css('font-weight', 'normal')
+  */
   setupViewer2 = function(){
     var res$, i$, ref$, len$, i;
     res$ = [];

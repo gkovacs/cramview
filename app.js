@@ -1,5 +1,5 @@
 (function(){
-  var express, path, fs, app, exec, get_index, toSeconds, spawn, callCommand, makeSegment, serverRootStatic, makeSnapshot;
+  var express, path, fs, app, exec, get_index, toSeconds, spawn, callCommand, makeSegment, serverRootStatic, segmentVideo, makeSnapshot;
   express = require('express');
   path = require('path');
   fs = require('fs');
@@ -66,19 +66,17 @@
     var extra_options, command, options;
     extra_options = [];
     if (output.indexOf('.webm') !== -1) {
-      extra_options = ['-cpu-used', '-5', '-deadline', 'realtime'];
+      extra_options = ['-c:v', 'libvpx', '-b:v', '1M', '-c:a', 'libvorbis', '-cpu-used', '-5', '-deadline', 'realtime'];
     }
     if (output.indexOf('.mp4') !== -1) {
       extra_options = ['-codec:v', 'libx264', '-profile:v', 'high', '-preset', 'ultrafast', '-threads', '0', '-strict', '-2', '-codec:a', 'aac'];
     }
     command = './ffmpeg';
     options = ['-ss', start, '-t', end - start, '-i', video].concat(extra_options.concat(['-y', output]));
-    return callCommand(command, options, function(){
-      return callCommand('qtfaststart', [output], callback);
-    });
+    return callCommand(command, options, callback);
   };
   serverRootStatic = 'http://10.172.99.34:80/';
-  app.get('/segmentvideo', function(req, res){
+  segmentVideo = function(req, res){
     var video, start, end, video_base, video_path, output_file, output_path;
     console.log('segmentvideo');
     video = req.query.video;
@@ -86,7 +84,7 @@
     end = req.query.end;
     video_base = video.split('.')[0];
     video_path = video;
-    output_file = video_base + '_' + start + '_' + end + '.mp4';
+    output_file = video_base + '_' + start + '_' + end + '.webm';
     output_path = 'static/' + output_file;
     if (fs.existsSync(output_path)) {
       console.log(serverRootStatic + output_path);
@@ -96,7 +94,8 @@
         return res.redirect(serverRootStatic + output_path);
       });
     }
-  });
+  };
+  app.get('/segmentvideo', segmentVideo);
   makeSnapshot = function(video, time, thumbnail_path, width, height, callback){
     var command;
     command = './ffmpeg -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path;

@@ -473,10 +473,8 @@ setSectionPriorityMarker = root.setSectionPriorityMarker = (section_idx, priorit
     $('#scrollbar').append $('<span>').attr('id', 'priority_marker_' + section_idx)
     priority_marker = $('#priority_marker_' + section_idx)
   section = getSectionByIdx(section_idx)
-  console.log section
   fraction = section.start / root.videoDuration
   position = fraction * getScrollbarWidth()
-  console.log position
   priority_marker.css('position', 'absolute')
   priority_marker.css('left', position + 'px')
   priority_marker.css('margin-left', 5)
@@ -558,21 +556,92 @@ jumpButtonClicked = root.jumpButtonClicked = ->
   else
     showReview getSectionIdxByTime(videoTime)
 
+root.disableSlideUpdate = false
+
+root.curPidx = -1
+
+getCurPidx = root.getCurPidx = -> root.curPidx
+
+getNextPidx = root.getNextPidx = ->
+  root.curPidx += 1
+  return root.curPidx
+
+makeVideo = (idx) ->
+  section = root.annotations[idx]
+  videoelem = J('video')
+  .attr('idx', idx)
+  #.attr('pidx', pidx)
+  .addClass("videogroup_#idx")
+  #.attr('id', "video+#pidx")
+  .attr('controls', 'controls')
+  .attr('preload', 'auto')
+  .append J('source')
+  .attr('src', 'segmentvideo' /*+ Math.floor(Math.random() * 2**32)*/ + '?' + $.param({video: root.video_file, start: section.start, end: section.end}))
+  #scrollbar = J('div').
+  return J('div').append videoelem
+
+root.video_viewers = []
+root.video_attachments = []
+
+root.reuse_videos = false
+
+addCard = root.addCard = (idx, showCard, isInitialStack) ->
+  pidx = getNextPidx()
+  section = root.annotations[idx]
+  header = J("\#cardtitle_#pidx.panel-heading").append J('h4.panel-title').append [J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_#pidx").attr('pidx', pidx).addClass("slidergroup_#idx"), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a\#title_text_#pidx(data-toggle='collapse' href='\#collapse_#pidx')").text(section.question) ]
+  if root.reuse_videos and not root.video_viewers[idx]?
+    root.video_viewers[idx] = makeVideo(idx)
+  #root.video_viewers[idx].detach()
+  #root.video_attachments[idx] = pidx
+  footer = J("\#collapse_#pidx.panel-collapse.collapse").append J("\#video_container_#pidx.panel-body") #.append root.video_viewers[idx] #makeVideo(idx, pidx)
+  cursec = J("\#card_#pidx.cardgroup.panel.panel-default").append [header, footer]
+  if isInitialStack
+    $('#accordion_initial').append cursec
+  else
+    $('#accordion').append cursec
+  $("\#collapse_#pidx").on 'show.bs.collapse', ->
+    if root.video_attachments[idx] != pidx
+      if root.reuse_videos
+        $('#collapse_' + root.video_attachments[idx]).collapse 'hide'
+        root.video_viewers[idx].detach()
+        $("\#video_container_#pidx").append root.video_viewers[idx]
+        root.video_attachments[idx] = pidx
+      else
+        $("\#video_container_#pidx").append makeVideo(idx)
+  if showCard
+    $("\#collapse_#pidx").collapse 'show'
+  $("\#slider_#pidx").slider {
+    formatter: (value) -> value #'Current value: ' + value
+    tooltip: 'show' #'always'
+  }
+  if not root.settingUpViewer
+    curval = $(root.sliders[idx]).slider 'getValue'
+    $("\#slider_#pidx").slider('setValue', curval, false)
+  $("\#slider_#pidx").on 'slide', ->
+    if root.disableSlideUpdate
+      return
+    newval = parseInt $("\#slider_#pidx").slider('getValue')
+    for slider in $(".slidergroup_#idx")
+      if pidx == parseInt $(slider).attr('pidx')
+        continue
+      root.disableSlideUpdate = true
+      $(slider).slider('setValue', newval, false)
+      root.disableSlideUpdate = false
+  $("\#slider_#pidx").parent().find('.slider-selection').css 'background' '#BABABA'
+  #console.log $('#accordion').find('.cardgroup').length
+  #while $('#accordion').find('.cardgroup').length > 5 #root.annotations.length + 10
+  #  $($('#accordion').find('.cardgroup')[0]).detach() #.remove()
+
+
+root.sliders = []
+root.settingUpViewer = true
+
+#root.prevScroll = 0
+
 setupViewer = ->
   console.log 'viewer set up'
-  for section,idx in annotations
-    console.log section
-    header = J('.panel-heading').append J('h4.panel-title').append [J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_#idx"), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a\#title_text_#idx(data-toggle='collapse' href='\#collapse_#idx')").text(section.question) ]
-    footer = J("\#collapse_#idx.panel-collapse.collapse.in").append J('.panel-body').append J('video').attr('controls', 'controls').attr('src', 'segmentvideo?' + $.param({video: root.video_file, start: section.start, end: section.end}))
-    cursec = J('.panel.panel-default').append [header, footer]
-    $('#accordion').append cursec
-    $("\#collapse_#idx").collapse 'hide'
-    $("\#slider_#idx").slider {
-      formatter: (value) -> value #'Current value: ' + value
-      tooltip: 'show' #'always'
-    }
-    $("\#slider_#idx").slide 
-    $("\#slider_#idx").parent().find('.slider-selection').css 'background' '#BABABA'
+  for section,idx in root.annotations
+    addCard(idx, false, true)
     #header = $('<h2>').text(section.question).append "<input type='range' min='1' max='10' style='float: left; width: 100px'>"
     #footer_video = $('<video>').attr('src', 'segmentvideo?' + $.param({video: root.video_file, start: section.start, end: section.end}))
     #footer = $('<div>').append footer_video
@@ -581,12 +650,105 @@ setupViewer = ->
   #$('#accordion').accordion {
   #  heightStyle: 'content'
   #}
+  root.settingUpViewer = false
+  root.sliders = $('.slider_input')[0 til root.annotations.length]
+  /*
+  $(document).scroll (evt) ->
+    scroll_top = $(document).scrollTop()
+    document_height = $(document).height()
+    #console.log document_height
+    window_height = $(window).height()
+    #console.log window_height
+    scroll_fraction = scroll_top / (document_height - window_height)
+    console.log scroll_fraction
+    if scroll_fraction >= 1
+      review_clicked()
+    evt.preventDefault()
+    return false
+  */
+  $(document).mousewheel (evt) ->
+    #console.log evt
+    #console.log evt.deltaY
+    scroll_top = $(document).scrollTop()
+    document_height = $(document).height()
+    #console.log document_height
+    window_height = $(window).height()
+    #console.log window_height
+    scroll_fraction = scroll_top / (document_height - window_height)
+    #scroll_fraction = (scroll_top + window_height) / $('#end_padding_div').offset().top
+    #console.log scroll_fraction
+    if evt.deltaY < 0 and (scroll_fraction >= 1 or isNaN(scroll_fraction))
+      review_clicked()
+      evt.stopImmediatePropagation()
+      evt.preventDefault()
+      return false
+    evt.preventDefault()
+    evt.stopImmediatePropagation()
+    if evt.deltaY <= 0
+      $(document).scrollTop(scroll_top + 20)
+    else
+      $(document).scrollTop(scroll_top - 20)
+    return false
+    #console.log evt.pageY
+  #$(document).scroll (evt) ->
+  #  scroll_top = $(document).scrollTop()
+  #  document_height = $(document).height()
+  #  window_height = $(window).height()
+  #  scroll_fraction = scroll_top / (document_height - window_height)
+  #  prev_scroll = root.prevScroll
+  #  root.prevScroll = scroll_top
+  #  #console.log scroll_top - prev_scroll
+  #  console.log scroll_fraction
 
 nanToZero = (num) ->
   if num? and not isNaN(num)
     return num
   return 0
 
+randn = (toplim) -> Math.floor(Math.random() * toplim)
+
+shuffle = root.shuffle = (aorig) ->
+  a = aorig[to]
+  for i in [a.length - 1 to 1 by -1]
+    j = randn (i + 1)
+    [a[j], a[i]] = [a[i], a[j]]
+  return a
+
+removeExcessCards = ->
+  num_elements_to_remove = $('#accordion').find('.cardgroup').length - 10
+  console.log 'removing excess cards:' + num_elements_to_remove
+  if num_elements_to_remove > 0
+    $('#accordion').find('.cardgroup').slice(0, num_elements_to_remove).remove()
+
+root.review_last_clicked_time = 0
+
+review_clicked = root.review_clicked = ->
+  curTime = Date.now()
+  if root.review_last_clicked_time + 2000 > curTime
+    return
+  root.review_last_clicked_time = curTime
+  console.log 'review clicked'
+  slider_values_and_idx = [[nanToZero(parseInt(slider.value)),idx] for slider,idx in root.sliders]
+  slider_values_and_idx = slider_values_and_idx.sort()
+  bottom_values_and_idx = shuffle(slider_values_and_idx)[0 til 3]
+  #bottom_values_and_idx = slider_values_and_idx[0 til 3]
+  indexes_to_review_set = {[idx,true] for [value,idx] in bottom_values_and_idx}
+  for [value,idx] in bottom_values_and_idx
+    showCard = false
+    #if value < 30
+    #if Math.random() > 0.6
+    #  showCard = true
+    showCard = true
+    #$("\#collapse_#idx").collapse 'show'
+    #$(sliders[idx]).slider 'setValue', Math.min(100, value+10)
+    #$("\#title_text_#idx").css('font-weight', 'bold')
+    addCard(idx, showCard, false)
+    pidx = getCurPidx()
+    if showCard
+      $("\#slider_#pidx").slider 'setValue', Math.min(100, value+10)
+  removeExcessCards()
+
+/*
 review_clicked = root.review_clicked = ->
   console.log 'review clicked'
   slider_values_and_idx = [[nanToZero(parseInt(slider.value)),idx] for slider,idx in $('.slider_input')]
@@ -601,6 +763,7 @@ review_clicked = root.review_clicked = ->
     if not indexes_to_review_set[idx]?
       $("\#collapse_#idx").collapse 'hide'
       $("\#title_text_#idx").css('font-weight', 'normal')
+*/
 
 setupViewer2 = ->
   root.watched = [false for i in [0 to Math.round(root.videoDuration+0.5)]]

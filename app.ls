@@ -55,7 +55,7 @@ callCommand = (command, options, callback) ->
 makeSegment = (video, start, end, output, callback) ->
   extra_options = []
   if output.indexOf('.webm') != -1
-    extra_options = <[ -cpu-used -5 -deadline realtime ]>
+    extra_options = <[ -c:v libvpx -b:v 1M -c:a libvorbis -cpu-used -5 -deadline realtime ]>
   if output.indexOf('.mp4') != -1
     extra_options = <[ -codec:v libx264 -profile:v high -preset ultrafast -threads 0 -strict -2 -codec:a aac ]>
   #  #extra_options = <[ -strict experimental ]>
@@ -63,28 +63,32 @@ makeSegment = (video, start, end, output, callback) ->
   command = './ffmpeg'
   #command = 'avconv'
   options = ['-ss', start, '-t', (end - start), '-i', video].concat extra_options.concat ['-y', output]
-  callCommand command, options, ->
-    callCommand 'qtfaststart', [output], callback
+  callCommand command, options, callback
+  #callCommand command, options, ->
+  #  callCommand 'qtfaststart', [output], callback
 
 serverRootStatic = 'http://10.172.99.34:80/'
 
-app.get '/segmentvideo', (req, res) ->
+segmentVideo = (req, res) ->
   console.log 'segmentvideo'
   video = req.query.video
   start = req.query.start
   end = req.query.end
   video_base = video.split('.')[0]
   video_path = video
-  output_file = video_base + '_' + start + '_' + end + '.mp4' #'.webm'
+  output_file = video_base + '_' + start + '_' + end + '.webm'
   output_path = 'static/' + output_file
   if fs.existsSync(output_path)
     console.log serverRootStatic + output_path
-    res.redirect serverRootStatic + output_path
+    res.redirect serverRootStatic + output_path #+ '?' + Math.floor(Math.random() * 2**32)
     #res.sendfile output_path
   else
     makeSegment video_path, start, end, output_path, ->
       #res.sendfile output_path
-      res.redirect serverRootStatic + output_path
+      res.redirect serverRootStatic + output_path #+ '?' + Math.floor(Math.random() * 2**32)
+
+app.get '/segmentvideo', segmentVideo
+#app.get '/segmentvideo*', segmentVideo
 
 makeSnapshot = (video, time, thumbnail_path, width, height, callback) ->
   command = './ffmpeg -ss ' + time + ' -i ' + video + ' -y -vframes 1 -s ' + width + 'x' + height + ' ' + thumbnail_path

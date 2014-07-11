@@ -13,10 +13,14 @@ html(lang="en")
     //-script(src='bower_components/jquery-ui/jquery-ui.min.js')
     script(src='bower_components/jadeDom/jquery.jadedom.js')
     script(src='bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js')
+    script(src='bower_components/jquery-mousewheel/jquery.mousewheel.min.js')
     script(src='index.js')
-    p How well can you answer each of these questions?
+    h3 How well can you answer each of these questions?
+    #accordion_initial.panel-group
+    h3 Review Section
     #accordion.panel-group
     button.btn.btn-default.btn-lg(type='button' onclick='review_clicked()') Review
+    //- #end_padding_div
       //- .panel.panel-default
       //-   .panel-heading
       //-     h4.panel-title
