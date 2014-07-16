@@ -566,31 +566,98 @@ getNextPidx = root.getNextPidx = ->
   root.curPidx += 1
   return root.curPidx
 
-makeVideo = (idx) ->
+isInView = root.isInView = (video_elem) ->
+  #console.log video_elem.offset()
+  #console.log video_elem.css('height')
+  #console.log video_elem.height()
+  top_visible = $(document).scrollTop()
+  bottom_visible = top_visible + $(window).height()
+  top_video = video_elem.offset().top
+  bottom_video = top_video + video_elem.height()
+  return top_visible < top_video < bottom_video < bottom_visible
+
+makeVideo = (idx, pidx) ->
   section = root.annotations[idx]
-  videoelem = J('video')
-  .attr('idx', idx)
-  #.attr('pidx', pidx)
-  .addClass("videogroup_#idx")
-  #.attr('id', "video+#pidx")
-  .attr('controls', 'controls')
-  .attr('preload', 'auto')
-  .append J('source')
-  .attr('src', 'segmentvideo' /*+ Math.floor(Math.random() * 2**32)*/ + '?' + $.param({video: root.video_file, start: section.start, end: section.end}))
-  #scrollbar = J('div').
-  return J('div').append videoelem
+  videocontainer = J('div')
+    .attr('id', "video_#pidx")
+    .css('display', 'inline-block')
+    .css('position', 'relative')
+  video_elem = J('video')
+    .attr('idx', idx)
+    .addClass('video_elem')
+    #.attr('pidx', pidx)
+    .addClass("videogroup_#idx")
+    .attr('id', "video_elem_#pidx")
+    #.attr('controls', 'controls')
+    .attr('preload', 'auto')
+    .append J('source')
+    .attr('src', 'segmentvideo' /*+ Math.floor(Math.random() * 2**32)*/ + '?' + $.param({video: root.video_file, start: section.start, end: section.end}))
+  retv = J('div')
+    .css('position', 'relative')
+  time = section.end - 2.0
+  thumbnail_src = '/thumbnail?' + $.param {video: root.video_file, time: Math.round(time), width: root.videoWidth, height: root.videoHeight}
+  thumbnail = J('div')
+    .attr('id', "video_thumbnail_#pidx")
+    .css('display', 'inline-block')
+  thumbnail_img = J('img')
+    .attr('src', thumbnail_src)
+    .attr('id', "video_thumbnail_img_#pidx")
+    .attr('draggable', 'false')
+  thumbnail.append thumbnail_img
+  videocontainer.append video_elem
+  video_progressbar = J('div')
+    .attr('id', "video_progressbar_#pidx")
+    .addClass('video_progressbar')
+    .css('position', 'absolute')
+    .css('opacity', 0.5)
+    .css('width', '50px')
+    .css('left', 0)
+    .css('top', '50%')
+    .css('height', '10%')
+    #.css('margin-top', '-10%')
+    .css('border-radius', '15px')
+    .css('background-color', 'blue')
+  videocontainer.append video_progressbar
+  retv.append thumbnail
+  retv.append videocontainer
+  return retv
 
 root.video_viewers = []
 root.video_attachments = []
 
 root.reuse_videos = false
 
+setVideoTimeToFraction = root.setVideoTimeToPercent = (video, time_fraction) ->
+  video_elem = video.find('.video_elem')
+  new_time = video_elem[0].duration * time_fraction
+  setVideoTime video, new_time
+
+setVideoTimeToOffset = root.setVideoTimeToOffset = (video, offset_time) ->
+  video_elem = video.find('.video_elem')
+  new_time = video_elem[0].currentTime + offset_time
+  if new_time < 0
+    new_time = 0
+  if new_time > video_elem[0].duration
+    new_time = video_elem[0].duration
+  setVideoTime video, new_time
+
+setVideoTime = root.setVideoTime = (video, time) ->
+  video_elem = video.find('.video_elem')
+  fraction = time / video_elem[0].duration
+  video_progressbar = video.find('.video_progressbar')
+  video_progressbar.css('width', (fraction * root.videoWidth) + 'px')
+  video_elem[0].currentTime = time
+
+root.hammer_options = {recognizers: [ [Hammer.Pan, {direction: Hammer.DIRECTION_ALL, threshold: 0}] ]}
+
 addCard = root.addCard = (idx, showCard, isInitialStack) ->
   pidx = getNextPidx()
   section = root.annotations[idx]
-  header = J("\#cardtitle_#pidx.panel-heading").append J('h4.panel-title').append [J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_#pidx").attr('pidx', pidx).addClass("slidergroup_#idx"), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px'), J("a\#title_text_#pidx(data-toggle='collapse' href='\#collapse_#pidx')").text(section.question) ]
+  #header_slider = [ J('span.slider_label').text("Don't Know").css('margin-right', '20px'), J('input.slider_input(data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0")').attr('id', "slider_#pidx").attr('pidx', pidx).addClass("slidergroup_#idx"), J('span.slider_label').text('Know').css('margin-left', '20px').css('margin-right', '20px') ]
+  header_slider = []
+  header = J("\#cardtitle_#pidx.panel-heading").append J('h4.panel-title').append(header_slider.concat [ J("a\#title_text_#pidx(data-toggle='collapse' href='\#collapse_#pidx')").text(section.question) ] )
   if root.reuse_videos and not root.video_viewers[idx]?
-    root.video_viewers[idx] = makeVideo(idx)
+    root.video_viewers[idx] = makeVideo(idx, pidx)
   #root.video_viewers[idx].detach()
   #root.video_attachments[idx] = pidx
   footer = J("\#collapse_#pidx.panel-collapse.collapse").append J("\#video_container_#pidx.panel-body") #.append root.video_viewers[idx] #makeVideo(idx, pidx)
@@ -604,10 +671,117 @@ addCard = root.addCard = (idx, showCard, isInitialStack) ->
       if root.reuse_videos
         $('#collapse_' + root.video_attachments[idx]).collapse 'hide'
         root.video_viewers[idx].detach()
+        root.video_viewers[idx].attr('id', "video_#pidx")
         $("\#video_container_#pidx").append root.video_viewers[idx]
         root.video_attachments[idx] = pidx
       else
-        $("\#video_container_#pidx").append makeVideo(idx)
+        $("\#video_container_#pidx").append makeVideo(idx, pidx)
+        root.video_attachments[idx] = pidx
+    $("\#video_#pidx").hide()
+    $("\#video_thumbnail_#pidx").show()
+    $("\#video_thumbnail_#pidx").off('click.tc0').on 'click.tc0', (evt) ->
+      $("\#video_thumbnail_#pidx").hide()
+      $("\#video_#pidx").show()
+    $("\#video_thumbnail_#pidx").off('mousewheel.tm0').on 'mousewheel.tm0', (evt) ->
+      if not isInView $("\#video_thumbnail_#pidx")
+        return true
+      if evt.deltaY > 0
+        console.log 'mouse up'
+        return true
+      if evt.deltaY < 0
+        console.log 'mouse down'
+        $("\#video_thumbnail_#pidx").hide()
+        $("\#video_#pidx").show()
+      evt.preventDefault()
+      return false
+    #$("\#video_#pidx").hammer(root.hammer_options).on 'pan', (evt) ->
+    /*
+    $("\#video_#pidx").on 'touchstart', (evt) ->
+      console.log 'touchstart'
+      evt.preventDefault()
+      return false
+    $("\#video_#pidx").on 'touchend', (evt) ->
+      console.log 'touchstart'
+      evt.preventDefault()
+      return false
+    $("\#video_#pidx").on 'touchmove', (evt) ->
+      console.log 'touchmove'
+      curx = evt.originalEvent.pageX #.changedTouches[0]
+      cury = evt.originalEvent.pageY
+      console.log "#curx,#cury"
+      evt.preventDefault()
+      return false
+    */
+    #$("\#video_#pidx").on 'touchstart', (evt) ->
+    #  $("\#video_#pidx").data('', )
+    $("\#video_#pidx").hammer(root.hammer_options).on 'pan', (evt) ->
+      if not isInView $("\#video_#pidx")
+        #console.log evt
+        scroll_top = $(document).scrollTop()
+        if evt.gesture.direction == 16 # going down
+          $(document).scrollTop(scroll_top - 20)
+        else
+          $(document).scrollTop(scroll_top + 20)
+        evt.preventDefault()
+        return false
+      console.log evt
+      #console.log evt.gesture.deltaX
+      video_offset = $("\#video_#pidx").offset()
+      xpos = evt.gesture.center.x - video_offset.left #+ evt.gesture.deltaX
+      ypos = evt.gesture.center.y - video_offset.top #+ evt.gesture.deltaY
+      xpercent = xpos / root.videoWidth
+      xpercent = Math.max(0, xpercent)
+      xpercent = Math.min(1, xpercent)
+      dx = evt.gesture.deltaX
+      dy = evt.gesture.deltaY
+      console.log evt.gesture.velocityY
+      direction = evt.gesture.direction # 2=left, 4=right, 8=up, 16=down
+      $('#logmsg').text(xpercent)
+      setVideoTimeToPercent $("\#video_#pidx"), xpercent
+      #if Math.abs(evt.gesture.velocityX) > Math.abs(evt.gesture.velocityY)
+      /*
+      if Math.abs(evt.gesture.deltaX) > Math.abs(evt.gesture.deltaY)
+        if Math.abs(evt.gesture.deltaX) > 30
+          setVideoTimeToPercent $("\#video_#pidx"), xpercent
+      else
+        #offset = evt.gesture.velocityY
+        offset = Math.abs(evt.gesture.deltaY)
+        if direction == 8
+          offset = -offset
+        setVideoTimeToOffset $("\#video_#pidx"), offset / 5
+      */
+      #$("\#video_elem_#pidx")[0].currentTime = xpercent * $("\#video_elem_#pidx")[0].duration
+      #$("\#video_progressbar_#pidx").css('width', (xpercent * root.videoWidth) + 'px')
+      #console.log "#xpos,#ypos"
+      console.log "#xpercent"
+
+    #$("\#video_#pidx").off('touchstart.vts0').on 'touchstart.vts0', (evt) ->
+    #  console.log evt
+    #$("\#video_#pidx").off('touchmove.vtm0').on 'touchmove.vtm0', (evt) ->
+    #  console.log evt
+    #$("\#video_#pidx").off('click.vc0').on 'click.vc0', (evt) ->
+    #  console.log evt
+    $("\#video_#pidx").off('mousewheel.vm0').on 'mousewheel.vm0', (evt) ->
+      if not isInView $("\#video_#pidx")
+        return true
+      console.log evt
+      if evt.deltaY > 0
+        console.log 'mouse up'
+        #if $("\#video_elem_#pidx")[0].currentTime <= 0
+        #  $("\#video_#pidx").hide()
+        #  $("\#video_thumbnail_#pidx").show()
+        if $("\#video_elem_#pidx")[0].currentTime <= 0
+          return true
+        setVideoTimeToOffset $("\#video_#pidx"), -5
+        #$("\#video_elem_#pidx")[0].currentTime -= 5.0
+      else if evt.deltaY < 0
+        console.log 'mouse down'
+        if $("\#video_elem_#pidx")[0].currentTime >= $("\#video_elem_#pidx")[0].duration
+          return true
+        setVideoTimeToOffset $("\#video_#pidx"), 5
+        #$("\#video_elem_#pidx")[0].currentTime += 5.0
+      evt.preventDefault()
+      return false
   if showCard
     $("\#collapse_#pidx").collapse 'show'
   $("\#slider_#pidx").slider {
@@ -639,6 +813,31 @@ root.settingUpViewer = true
 #root.prevScroll = 0
 
 setupViewer = ->
+  $(document).mousewheel (evt) ->
+    scroll_top = $(document).scrollTop()
+    if evt.deltaY > 0 # going up
+      $(document).scrollTop(scroll_top - 20)
+    else
+      $(document).scrollTop(scroll_top + 20)
+    evt.preventDefault()
+    return false
+  /*
+  $('body').on 'touchstart', (evt) ->
+    console.log 'touchstart'
+    evt.preventDefault()
+    return false
+  $('body').on 'touchend', (evt) ->
+    console.log 'touchstart'
+    evt.preventDefault()
+    return false
+  $('body').on 'touchmove', (evt) ->
+    console.log 'touchmove'
+    curx = evt.originalEvent.pageX #.changedTouches[0]
+    cury = evt.originalEvent.pageY
+    console.log "#curx,#cury"
+    evt.preventDefault()
+    return false
+  */
   console.log 'viewer set up'
   for section,idx in root.annotations
     addCard(idx, false, true)
@@ -666,6 +865,7 @@ setupViewer = ->
     evt.preventDefault()
     return false
   */
+  /*
   $(document).mousewheel (evt) ->
     #console.log evt
     #console.log evt.deltaY
@@ -690,6 +890,7 @@ setupViewer = ->
       $(document).scrollTop(scroll_top - 20)
     return false
     #console.log evt.pageY
+  */
   #$(document).scroll (evt) ->
   #  scroll_top = $(document).scrollTop()
   #  document_height = $(document).height()

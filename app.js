@@ -84,7 +84,7 @@
     end = req.query.end;
     video_base = video.split('.')[0];
     video_path = video;
-    output_file = video_base + '_' + start + '_' + end + '.webm';
+    output_file = video_base + '_' + start + '_' + end + '.mp4';
     output_path = 'static/' + output_file;
     if (fs.existsSync(output_path)) {
       console.log(serverRootStatic + output_path);

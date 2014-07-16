@@ -1,0 +1,13 @@
+{
+  "name": "thumbs.0.6.0.min",
+  "_cacheHeaders": {
+    "Last-Modified": "Sat, 14 Sep 2013 20:24:35 GMT",
+    "Content-Length": "699",
+    "Content-Type": "application/javascript; charset=utf-8"
+  },
+  "main": "index.js",
+  "_source": "http://mwbrooks.github.io/thumbs.js/download/thumbs.0.6.0.min.js",
+  "_target": "*",
+  "_originalSource": "http://mwbrooks.github.io/thumbs.js/download/thumbs.0.6.0.min.js",
+  "_direct": true
+}

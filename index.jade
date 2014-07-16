@@ -2,6 +2,7 @@ doctype html
 html(lang="en")
   head
     title quiz view
+    meta(name='viewport' content='user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1')
     link(href='index.css' rel='stylesheet')
     link(href='bower_components/bootstrap/dist/css/bootstrap.min.css' rel='stylesheet')
     link(href='bower_components/bootstrap/dist/css/bootstrap-theme.min.css' rel='stylesheet')
@@ -14,7 +15,11 @@ html(lang="en")
     script(src='bower_components/jadeDom/jquery.jadedom.js')
     script(src='bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js')
     script(src='bower_components/jquery-mousewheel/jquery.mousewheel.min.js')
+    script(src='bower_components/thumbs.0.6.0.min/index.js')
+    script(src='bower_components/hammerjs/hammer.min.js')
+    script(src='bower_components/hammerjs/jquery.hammer.js')
     script(src='index.js')
+    span#logmsg(style='position: absolute; top: 0px; left: 0px')
     h3 How well can you answer each of these questions?
     #accordion_initial.panel-group
     h3 Review Section
